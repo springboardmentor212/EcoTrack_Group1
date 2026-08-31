@@ -1,0 +1,10 @@
+:root {
+  --color-primary: #0F172A;      /* Deep Ocean */
+  --color-secondary: #0284C7;    /* Sky Blue */
+  --color-accent: #06B6D4;       /* Electric Cyan */
+  --color-eco: #10B981;          /* Subtle Mint */
+  --color-text-dark: #334155;    /* Slate Dark */
+  --color-text-muted: #64748B;   /* Muted Slate */
+  --color-surface: #FFFFFF;      /* Pure White */
+  --color-background: #F8FAFC;   /* Clean Slate */
+}
