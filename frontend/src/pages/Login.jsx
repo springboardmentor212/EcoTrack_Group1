@@ -1,14 +1,27 @@
 import {useState} from "react";
-import {Eye, EyeOff, Flower} from "lucide-react";
+import {Eye, EyeOff, Flower, Loader, Loader2} from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Login(){
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({email, password})
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    setLoading(true);
+    try{
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log({email : cleanEmail, password});
+      toast.success("Logged in successfully!");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -77,23 +90,28 @@ export default function Login(){
             </div>
 
             <div className="flex justify-end">
-              <a href="/forgot-password" className="text-sm font-medium text-[var(--color-secondary)]">
+              <Link to="/forgot-password" className="text-sm font-medium text-[var(--color-secondary)]">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button
             type="submit"
-            className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95"
+            disabled={loading}
+            className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Log in
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={16} className="animate-spin" />
+                  Please wait
+                </span>) : ( "Log in" )}
             </button> 
 
             <p className="mt-2 text-center text-sm text-[var(--color-text-muted)]">
               Don't have an account?{" "}
-              <a href="/register" className="font-medium text-[var(--color-secondary)]">
+              <Link to="/register" className="font-medium text-[var(--color-secondary)]">
                 Sign up
-              </a>
+              </Link>
             </p>
           </form>
         </div>

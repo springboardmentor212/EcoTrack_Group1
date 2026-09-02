@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Flower } from "lucide-react";
+import { Flower, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -7,10 +9,33 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ fullName, email, password, confirmPassword, agreed });
+
+    if(password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    setLoading(true);
+
+    try{
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log({ fullName, email: cleanEmail, password, confirmPassword, agreed });
+      toast.success(res.data.message || "Account created successfully!");
+
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setAgreed(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,37 +141,42 @@ export default function Register() {
               />
               <span>
                 I agree to the{" "}
-                <a
-                  href="/terms"
+                <Link
+                  to="/terms"
                   className="font-medium text-[var(--color-secondary)]"
                 >
                   Terms of Service
-                </a>{" "}
+                </Link>{" "}
                 &{" "}
-                <a
-                  href="/privacy"
+                <Link
+                  to="/privacy"
                   className="font-medium text-[var(--color-secondary)]"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </span>
             </label>
 
             <button
-              type="submit"
-              className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95"
+            type="submit"
+            disabled={loading}
+            className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={16} className="animate-spin" />
+                  Please wait
+                </span>) : ( "Create Account" )}
             </button>
 
             <p className="mt-2 text-center text-sm text-[var(--color-text-muted)]">
               Already have an account?{" "}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="font-medium text-[var(--color-secondary)]"
               >
                 Log In
-              </a>
+              </Link>
             </p>
           </form>
         </div>
