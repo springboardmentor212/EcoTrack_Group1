@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
@@ -8,13 +9,26 @@ const {
   resetPassword,
 } = require("../controllers/authController");
 
-// 1. Forgot Password
-router.post("/forgot-password", forgotPassword);
+// Limit OTP requests
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 3, // Maximum 3 requests
+  message: {
+    message: "Too many OTP requests. Please try again after 10 minutes.",
+  },
+});
 
-// 2. Verify OTP
+// Forgot Password
+router.post(
+  "/forgot-password",
+  forgotPasswordLimiter,
+  forgotPassword
+);
+
+// Verify OTP
 router.post("/verify-otp", verifyOTP);
 
-// 3. Reset Password
+// Reset Password
 router.post("/reset-password", resetPassword);
 
 module.exports = router;

@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    resetOTPVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

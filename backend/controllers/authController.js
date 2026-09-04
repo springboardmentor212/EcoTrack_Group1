@@ -1,12 +1,13 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const transporter = require("../config/email");
 
 // Generate a 6-digit OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// 1. Forgot Password - Generate OTP
+// 1. Forgot Password - Generate and send OTP
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -25,18 +26,31 @@ const forgotPassword = async (req, res) => {
       });
     }
 
+    // Generate OTP
     const otp = generateOTP();
 
-    user.resetOTP = otp;
+    // Hash OTP before storing it
+    const hashedOTP = await bcrypt.hash(otp, 10);
+
+    // Save hashed OTP and expiry time
+    user.resetOTP = hashedOTP;
     user.resetOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    // New OTP means previous verification is no longer valid
+    user.resetOTPVerified = false;
 
     await user.save();
 
-    // Temporary: OTP shown in backend terminal
-    console.log(`Password reset OTP for ${email}: ${otp}`);
+    // Send OTP to user's email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "EcoTrack Password Reset OTP",
+      text: `Your OTP for resetting your EcoTrack password is: ${otp}. This OTP will expire in 10 minutes.`,
+    });
 
     return res.status(200).json({
-      message: "OTP generated successfully",
+      message: "OTP sent successfully to your email",
     });
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -66,17 +80,25 @@ const verifyOTP = async (req, res) => {
       });
     }
 
-    if (user.resetOTP !== otp) {
-      return res.status(400).json({
-        message: "Invalid OTP",
-      });
-    }
-
+    // Check OTP expiry
     if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
       return res.status(400).json({
         message: "OTP has expired",
       });
     }
+
+    // Compare entered OTP with hashed OTP
+    const isOTPValid = await bcrypt.compare(otp, user.resetOTP);
+
+    if (!isOTPValid) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    // Mark OTP as verified
+    user.resetOTPVerified = true;
+    await user.save();
 
     return res.status(200).json({
       message: "OTP verified successfully",
@@ -109,15 +131,26 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    if (user.resetOTP !== otp) {
+    // Check whether OTP was verified
+    if (!user.resetOTPVerified) {
       return res.status(400).json({
-        message: "Invalid OTP",
+        message: "Please verify OTP first",
       });
     }
 
+    // Check OTP expiry
     if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
       return res.status(400).json({
         message: "OTP has expired",
+      });
+    }
+
+    // Compare entered OTP with hashed OTP
+    const isOTPValid = await bcrypt.compare(otp, user.resetOTP);
+
+    if (!isOTPValid) {
+      return res.status(400).json({
+        message: "Invalid OTP",
       });
     }
 
@@ -125,9 +158,10 @@ const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Clear OTP after successful password reset
+    // Clear OTP data after successful password reset
     user.resetOTP = "";
     user.resetOTPExpiry = null;
+    user.resetOTPVerified = false;
 
     await user.save();
 
@@ -145,7 +179,6 @@ const resetPassword = async (req, res) => {
 
 module.exports = {
   forgotPassword,
-  
   verifyOTP,
   resetPassword,
 };
