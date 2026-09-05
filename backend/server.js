@@ -1,9 +1,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const testRoutes = require("./routes/testRoutes");
 
 dotenv.config();
 console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
@@ -20,8 +20,8 @@ connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/test", testRoutes);
 
-// Test route
 app.get("/", (req, res) => {
   res.send("EcoTrack Backend API is running");
 });
