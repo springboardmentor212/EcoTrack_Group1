@@ -1,13 +1,14 @@
-import './App.css'
-import Layout from './components/Layout'
-import AppRoutes from './routes/AppRoutes'
+import "./App.css";
+import { Toaster } from "sonner";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   return (
-    <Layout>
+    <>
+      <Toaster position="bottom-right" richColors />
       <AppRoutes />
-    </Layout>
-  )
+    </>
+  );
 }
 
-export default App
+export default App;
