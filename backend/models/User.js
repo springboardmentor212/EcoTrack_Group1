@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      default: "",
+      required: true,
     },
 
     role: {
@@ -23,15 +23,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-
-    googleId: {
-      type: String,
-      default: "",
-    },
-
+    
     resetOTP: {
       type: String,
-      default: "",
+      default: null,
     },
 
     resetOTPExpiry: {

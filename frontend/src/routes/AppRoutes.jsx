@@ -3,6 +3,7 @@ import Login from '../pages/Login'
 import Register from '../pages/Register'
 import Layout from '../components/Layout'
 import ForgotPassword from '../pages/ForgotPassword'
+import UserDashboard from '../pages/UserDashboard'
 
 function AppRoutes() {
   return (
@@ -10,6 +11,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/user-dashboard" element={<UserDashboard />} />
     </Routes>
   )
 }

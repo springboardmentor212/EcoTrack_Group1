@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Flower, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import axios from "axios";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -10,11 +11,12 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if(password !== confirmPassword) {
+    if (password !== confirmPassword) {
       toast.error("Passwords do not match.");
       return;
     }
@@ -23,9 +25,12 @@ export default function Register() {
 
     setLoading(true);
 
-    try{
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log({ fullName, email: cleanEmail, password, confirmPassword, agreed });
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/register`,
+        { name: fullName, email: cleanEmail, password },
+      );
+
       toast.success(res.data.message || "Account created successfully!");
 
       setFullName("");
@@ -33,6 +38,13 @@ export default function Register() {
       setPassword("");
       setConfirmPassword("");
       setAgreed(false);
+
+      navigate("/login");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Registration failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -158,15 +170,18 @@ export default function Register() {
             </label>
 
             <button
-            type="submit"
-            disabled={loading}
-            className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={loading}
+              className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 size={16} className="animate-spin" />
                   Please wait
-                </span>) : ( "Create Account" )}
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </button>
 
             <p className="mt-2 text-center text-sm text-[var(--color-text-muted)]">
