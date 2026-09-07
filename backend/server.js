@@ -1,11 +1,16 @@
 const express = require("express");
 const dotenv = require("dotenv");
+
+dotenv.config();
+
 const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const testRoutes = require("./routes/testRoutes");
 
-dotenv.config();
+// Database connection
+connectDB();
+
 console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
 console.log("EMAIL_PASS loaded:", !!process.env.EMAIL_PASS);
 
@@ -14,9 +19,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Database connection
-connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);

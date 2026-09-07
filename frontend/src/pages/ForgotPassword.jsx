@@ -19,11 +19,21 @@ export default function ForgotPassword() {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+
+    const cleanEmail = email.trim().toLowerCase();
+
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("OTP sent to your email");
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        { email: cleanEmail },
+      );
+      toast.success(res.data.message || "OTP sent to your email");
       setStep(2);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send OTP. Please try again",
+      );
     } finally {
       setLoading(false);
     }
@@ -36,8 +46,8 @@ export default function ForgotPassword() {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if(value && index < 5){
-        inputRefs.current[index + 1].focus();
+    if (value && index < 5) {
+      inputRefs.current[index + 1].focus();
     }
   };
 
@@ -51,16 +61,25 @@ export default function ForgotPassword() {
     e.preventDefault();
 
     const otpString = otp.join("");
-    if(otpString.length !== 6){
-        toast.error("Please enter all 6 digits.");
-        return;
+    if (otpString.length !== 6) {
+      toast.error("Please enter all 6 digits.");
+      return;
     }
+
+    const cleanEmail = email.trim().toLowerCase();
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("OTP verified");
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/verify-otp`,
+        { email: cleanEmail, otp: otpString },
+      );
+      toast.success(res.data.message || "OTP verified");
       setStep(3);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Invalid OTP. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -72,36 +91,56 @@ export default function ForgotPassword() {
       toast.error("Passwords do not match.");
       return;
     }
+
+    const cleanEmail = email.trim().toLowerCase();
+
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Password reset successful");
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/reset-password`,
+        { email: cleanEmail, otp: otp.join(""), newPassword },
+      );
+      toast.success(res.data.message || "Password reset successful");
       navigate("/login");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to reset password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleBack = () => {
-    if(step === 2){
-        setOtp(["", "", "", "", "", ""]);
-        setStep(1);
-        return;
+    if (step === 2) {
+      setOtp(["", "", "", "", "", ""]);
+      setStep(1);
+      return;
     }
-    if(step === 3){
-        navigate("/login");
-        return;
+    if (step === 3) {
+      navigate("/login");
+      return;
     }
   };
 
   const handleResendOtp = async () => {
+    const cleanEmail = email.trim().toLowerCase();
     setLoading(true);
-    try{
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        toast.success("OTP resent to your email");
-        setOtp(["", "", "", "", "", ""]);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        { email: cleanEmail },
+      );
+      toast.success(res.data.message || "OTP resent to your email");
+      setOtp(["", "", "", "", "", ""]);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to resend OTP. Please try again.",
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -248,19 +287,25 @@ export default function ForgotPassword() {
 
           {step === 3 && (
             <>
-            <h1 classNamw="mt-4 text-xl font-semibold text-[var(--color-primary)]">
+              <h1 classNamw="mt-4 text-xl font-semibold text-[var(--color-primary)]">
                 Reset Password
-            </h1>
-            <p className="mt-1 text-sm text-[var(--color-slate)]">
+              </h1>
+              <p className="mt-1 text-sm text-[var(--color-slate)]">
                 Your new Password must be at least 8 characters long.
-            </p>
+              </p>
 
-            <form onSubmit={handleResetPassword} className="mt-6 flex flex-col gap-4">
+              <form
+                onSubmit={handleResetPassword}
+                className="mt-6 flex flex-col gap-4"
+              >
                 <div>
-                    <label htmlFor="newPassword" className="mb-1 block text-sm font-medium text-[var(--color-muted)]">
-                        New Password
-                    </label>
-                    <input
+                  <label
+                    htmlFor="newPassword"
+                    className="mb-1 block text-sm font-medium text-[var(--color-muted)]"
+                  >
+                    New Password
+                  </label>
+                  <input
                     id="newPassword"
                     type="password"
                     required
@@ -268,14 +313,17 @@ export default function ForgotPassword() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full rounded-lg border border-[var(--color-slate)] px-3 py-2 text-sm outline-none"
-                    />
+                  />
                 </div>
 
                 <div>
-                    <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-[var(--color-muted)]">
-                        Confirm Password
-                    </label>
-                    <input
+                  <label
+                    htmlFor="confirmPassword"
+                    className="mb-1 block text-sm font-medium text-[var(--color-muted)]"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
                     id="confirmPassword"
                     type="password"
                     required
@@ -283,24 +331,24 @@ export default function ForgotPassword() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full rounded-lg border border-[var(--color-slate)] px-3 py-2 text-sm outline-none"
-                    />
+                  />
                 </div>
 
                 <button
-                type="submit"
-                disabled={loading}
-                className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                  type="submit"
+                  disabled={loading}
+                  className="cursor-pointer mt-1 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:bg-[#1E293B] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    {loading ? (
-                        <span className="flex items-center justify-center">
-                            <Loader2 size={16} className="animate-spin" />
-                            Please wait
-                        </span>
-                    ) : (
-                        "Reset Password"
-                    )}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <Loader2 size={16} className="animate-spin" />
+                      Please wait
+                    </span>
+                  ) : (
+                    "Reset Password"
+                  )}
                 </button>
-            </form>
+              </form>
             </>
           )}
         </div>
