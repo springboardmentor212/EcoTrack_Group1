@@ -1,11 +1,12 @@
-import React from "react";
+// 
 
-const UserDashboard = () => {
+import { Search, Bell, Sparkles} from "lucide-react";
+import Sidebar from "../components/Sidebar";
+
+export default function UserDashboard() {
     return (
-        <div style={{ padding: "2rem", textAlign: "center", fontSize: "50px"}}>
-            <h1>User Dashboard</h1>
+        <div className="flex h-screen bg-[var(--color-background)]">
+            <Sidebar userName="Trapti" userTag="Eco Warrior" userInitial="T" />
         </div>
-    );
-};
-
-export default UserDashboard;
+    )
+}
