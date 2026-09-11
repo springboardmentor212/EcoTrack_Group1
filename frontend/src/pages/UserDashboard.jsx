@@ -2,12 +2,21 @@ import { Search, Bell, Sparkles} from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import StatCard from "../components/StatCard";
 import GoalRow from "../components/GoalRow";
+import CategoryRow from "../components/CategoryRow";
 
 const statCards = [
     {label: "Total Carbon Footprint", value: "2.4 Tons CO₂", trend: "↓ 12% vs last month", trendGood: true},
     {label: "Sustainability Score", value: "78 / 100", badge: "Eco Warrior", trend: "↑ 4% vs last month", trendGood: true},
     {label: "Active Goals", value: "5 of 7", trend: "On Track vs last month", trendGood: true},
     {label: "Challenge Rank", value: "#24 / 1,250", trend: "↑ 8 places vs last month", trendGood: true},
+];
+
+const categories = [
+    {color: "#0EA5E9", label: "Transit (35%)", value: "840 kg"},
+    {color: "#F59E0B", label: "Electricity (25%)", value: "600 kg"},
+    {color: "#10B981", label: "Food (20%)", value: "480 kg"},
+    {color: "#6366F1", label: "Water (10%)", value: "240 kg"},
+    {color: "#94A3B8", label: "Waste (10%)", value: "240 kg"},
 ];
 
 const goals = [
@@ -47,6 +56,28 @@ export default function UserDashboard() {
                     {statCards.map((card, i) => (
                         <StatCard key={i} {...card} />
                     ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="col-span-2 bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-1">Emission Trend (kg CO₂)</h3>
+                        <p className="text-xs text-[var(--color-slate)] mb-4">Mar - Aug (Downward Trajectory)</p>
+                        <div className="h-40 flex items-center justify-center text-[var(--color-slate)] text-sm">
+                            [Line chart placeholder]
+                        </div>
+                    </div>
+
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4">Emissions by Category</h3>
+                        <div className="flex items-center justify-center h-24 mb-3">
+                            2.4t CO₂ total
+                        </div>
+                        <ul className="text-xs space-y-1">
+                            {categories.map((cat, i) => (
+                                <CategoryRow key={i} {...cat} />
+                            ))}
+                        </ul>
+                    </div>
                 </div>
 
 
