@@ -4,6 +4,8 @@ import StatCard from "../components/StatCard";
 import GoalRow from "../components/GoalRow";
 import CategoryRow from "../components/CategoryRow";
 import ChallengeRow from "../components/ChallengeRow";
+import TipRow from "../components/TipRow";
+import LeaderboardRow from "../components/LeaderboardRow";
 
 const statCards = [
     {label: "Total Carbon Footprint", value: "2.4 Tons CO₂", trend: "↓ 12% vs last month", trendGood: true},
@@ -31,6 +33,20 @@ const challenges = [
     {label: "Plastic-Free Week", note: "3 days left • 156 active"},
     {label: "Cycle to Work", note: "Ongoing • 892 active"},
     {label: "Tree Plantation Drive", note: "5 days left • 2,100 active"},
+];
+
+const tips = [
+    {text: "Switch to LED bulbs to save 75kg CO₂/year", note: "Potential: -75kg CO₂"},
+    {text: "Try carpooling on your commute - potential 40% reduction", note: "Potential: 120kg CO₂"},
+    {text: "Your water usage peaked Tuesday - consider shorter showers", note: "Potential: 15kg CO₂"},
+];
+
+const leaderboard = [
+    {rank: "#1", name: "Trapti", tag: "Super Champion", pts: "98 pts"},
+    {rank: "#2", name: "Parnika", tag: "Green Advocate", pts: "94 pts"},
+    {rank: "#3", name: "Dharmendra", tag: "Eco Mentor", pts: "89 pts"},
+    {rank: "#24", name: "Varsha", tag: "Eco Warrior", pts: "80 pts"},
+    {rank: "#25", name: "Harshan", tag: "Active Citizen", pts: "77 pts"},
 ];
 
 export default function UserDashboard() {
@@ -105,6 +121,26 @@ export default function UserDashboard() {
                         <h3 className="font-semibold text-[var(--color-primary)] mb-4">Active Challenges</h3>
                         {challenges.map((c, i) => (
                             <ChallengeRow key={i} {...c} />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4 flex items-center gap-2">
+                            <Sparkles size={16} /> AI Personalized Eco Tips
+                        </h3>
+                        {tips.map((tip, i) => (
+                            <TipRow key={i} {...tip} />
+                        ))}
+                    </div>
+
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4">
+                            Community Leaderboard
+                        </h3>
+                        {leaderboard.map((entry, i) => (
+                                <LeaderboardRow key={i} {...entry} />
                         ))}
                     </div>
                 </div>
