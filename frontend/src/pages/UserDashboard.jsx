@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import StatCard from "../components/StatCard";
 import GoalRow from "../components/GoalRow";
 import CategoryRow from "../components/CategoryRow";
+import ChallengeRow from "../components/ChallengeRow";
 
 const statCards = [
     {label: "Total Carbon Footprint", value: "2.4 Tons CO₂", trend: "↓ 12% vs last month", trendGood: true},
@@ -24,6 +25,12 @@ const goals = [
     {label: "Use Public Transport 3x/week", percent: 75, note: "Ongoing",},
     {label: "Reduce Water Usage by 15%", percent: 42, note: "18 days left",},
     {label: "Zero Waste Week Challenge", percent: 90, note: "2 days left",},
+];
+
+const challenges = [
+    {label: "Plastic-Free Week", note: "3 days left • 156 active"},
+    {label: "Cycle to Work", note: "Ongoing • 892 active"},
+    {label: "Tree Plantation Drive", note: "5 days left • 2,100 active"},
 ];
 
 export default function UserDashboard() {
@@ -91,6 +98,13 @@ export default function UserDashboard() {
                         </div>
                         {goals.map((goal, i) => (
                             <GoalRow key={i} {...goal} />
+                        ))}
+                    </div>
+
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4">Active Challenges</h3>
+                        {challenges.map((c, i) => (
+                            <ChallengeRow key={i} {...c} />
                         ))}
                     </div>
                 </div>
