@@ -1,4 +1,4 @@
-import { Flower, Home, Zap, Target, Trophy, FileText, Sparkles, User } from "lucide-react";
+import { Flower, Home, Zap, Target, Trophy, FileText, Search, Sparkles, User, Settings as SettingsIcon } from "lucide-react";
 import { Link, useLocation} from "react-router-dom";
 
 const NAV_ITEMS = [
@@ -6,9 +6,11 @@ const NAV_ITEMS = [
     { to: "/carbon-dashboard", icon: Zap, label: "Carbon Tracker" },
     { to: "/goals", icon: Target, label: "Goals" },
     { to: "/challenges", icon: Trophy, label: "Challenges"},
+    {to : "/search", icon: Search, label: "Search"},
     { to: "/reports", icon: FileText, label: "Reports"},
     { to: "/recommendations", icon: Sparkles, label: "Recommendations"},
     { to: "/profile", icon: User, label: "Profile"},
+    { to: "/settings", icon: SettingsIcon, label: "Settings" },
 ];
 
 export default function Sidebar({ userName, userTag, userInitial}){
@@ -24,20 +26,22 @@ export default function Sidebar({ userName, userTag, userInitial}){
             </div>
 
             <nav className="flex-1 px-4 flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => (
-                    <Link
-                    key={item.to}
-                    to={item.to}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                        location.pathname === item.to
-                        ? "bg-white/10 text-white font-medium"
-                        : "text-white/70 hover:bg-white/5"
-                    }`}
-                    >
+                {NAV_ITEMS.map((item) => {
+                    const isActive =
+                    location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+                    return (
+                        <Link
+                        key={item.to}
+                        to={item.to}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+                            isActive ? "bg-[var(--color-secondary)] font-medium" : "text-white/70 hover;bg-white/5"
+                        }`}
+                        >
                         <item.icon size={18} />
                         {item.label}
-                    </Link>
-                ))}
+                        </Link>
+                    )
+                })}
             </nav>
 
             <div className="p-4 flex items-center gap-3 border-t border-white/10">
