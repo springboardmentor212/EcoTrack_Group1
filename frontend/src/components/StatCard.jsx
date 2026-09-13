@@ -1,6 +1,6 @@
 export default function StatCard({ label, value, trend, trendGood = true, badge }) {
     return (
-        <div className="bg-[var(--color-surface)] rounded-2xl p-4 shadow-sm">
+        <div className="bg-[var(--color-surface)] rounded-2xl p-4 shadow-sm border-2 border-[var(--color-accent)]">
             <p className="text-xs text-[var(--color-slate)] mb-1">{label}</p>
             <div className="flex items-center gap-2">
                 <p className="text-xl font-bold text-[var(--color-primary)]">{value}</p>

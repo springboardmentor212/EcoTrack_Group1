@@ -20,7 +20,7 @@ export default function Sidebar({ userName, userTag, userInitial}){
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
                     <Flower size={18} color="#FFFFFF" />
                 </div>
-                <span className="text-lg fot-bold text-white">EcoTrack</span>
+                <span className="text-lg font-bold text-white">EcoTrack</span>
             </div>
 
             <nav className="flex-1 px-4 flex flex-col gap-1">

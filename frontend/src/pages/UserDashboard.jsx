@@ -6,6 +6,7 @@ import CategoryRow from "../components/CategoryRow";
 import ChallengeRow from "../components/ChallengeRow";
 import TipRow from "../components/TipRow";
 import LeaderboardRow from "../components/LeaderboardRow";
+import ActivityRow from "../components/ActivityRow";
 
 const statCards = [
     {label: "Total Carbon Footprint", value: "2.4 Tons CO₂", trend: "↓ 12% vs last month", trendGood: true},
@@ -49,6 +50,19 @@ const leaderboard = [
     {rank: "#25", name: "Harshan", tag: "Active Citizen", pts: "77 pts"},
 ];
 
+const activity = [
+    {text: "Logged bike commute - saved 2.1kg CO₂", time: "2 hours ago"},
+    {text: "Completed Plastic-Free challenge", time: "Yesterday"},
+    {text: "New badge earned: Eco Warrior", time: "2 days ago"},
+    {text: "Goal milestone: 50% water reduction reached", time: "3 days ago"},
+];
+
+const notifications = [
+    {text: "Weekly Report Available - your carbon breakdown is ready", time: "10m ago"},
+    {text: "Goal Progress Reminder - 2kg away from your commute milestone", time: "2h ago"},
+    {text: "New Challenge Live! Join Meatless Monday", time: "1d ago"},
+];
+
 export default function UserDashboard() {
     return (
         <div className="flex h-screen bg-[var(--color-background)]">
@@ -71,7 +85,7 @@ export default function UserDashboard() {
                             />
                         </div>
                         <Bell size={20} className="text-[var(--color-slate)]" />
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400"></div>
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-eco)]"></div>
                     </div>
                 </div>
 
@@ -141,6 +155,22 @@ export default function UserDashboard() {
                         </h3>
                         {leaderboard.map((entry, i) => (
                                 <LeaderboardRow key={i} {...entry} />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4">Recent Activity Feed</h3>
+                        {activity.map((a, i) => (
+                            <ActivityRow key={i} {...a} />
+                        ))}
+                    </div>
+
+                    <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-semibold text-[var(--color-primary)] mb-4">System Notifications</h3>
+                        {notifications.map((n, i) => (
+                            <ActivityRow key={i} {...n} />
                         ))}
                     </div>
                 </div>
