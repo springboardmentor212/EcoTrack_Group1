@@ -143,7 +143,7 @@ export default function UserDashboard() {
             <h3 className="font-semibold text-[var(--color-primary)]">
               Sustainability Goals
             </h3>
-            <span className="text-xs bg-[var(--color-ecoo)]/10 text-[var(--color-eco)] px-2 py-1 rounded-full">
+            <span className="text-xs font-semibold bg-[var(--color-eco)]/10 text-[var(--color-eco)] px-2 py-1 rounded-full">
               In Progress
             </span>
           </div>

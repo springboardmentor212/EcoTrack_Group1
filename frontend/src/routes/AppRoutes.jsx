@@ -24,8 +24,8 @@ function AppRoutes() {
       
       <Route element={<UserDashboardLayout />}>
         <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/carbon-dashboard" element={<CarbonTracker />} />
-        <Route path="/carbon-dashboard/:id" element={<EntryDetail />} />
+        <Route path="/carbon-tracker" element={<CarbonTracker />} />
+        <Route path="/carbon-tracker/:id" element={<EntryDetail />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/goals/:id" element={<GoalDetail />} />
         <Route path="/challenges" element={<Challenges />} />

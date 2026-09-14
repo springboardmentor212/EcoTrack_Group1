@@ -3,7 +3,7 @@ import { Link, useLocation} from "react-router-dom";
 
 const NAV_ITEMS = [
     { to: "/user-dashboard", icon: Home, label: "Dashboard" },
-    { to: "/carbon-dashboard", icon: Zap, label: "Carbon Tracker" },
+    { to: "/carbon-tracker", icon: Zap, label: "Carbon Tracker" },
     { to: "/goals", icon: Target, label: "Goals" },
     { to: "/challenges", icon: Trophy, label: "Challenges"},
     {to : "/search", icon: Search, label: "Search"},
