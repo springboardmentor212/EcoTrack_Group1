@@ -86,7 +86,7 @@ export default function EntryDetail() {
                             <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm border border-[var(--color-slate)] rounded-lg">
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 text-sm bg-[var(--color-eco)] text-white rounded-lg">
+                            <button className="px-4 py-2 text-sm bg-[var(--color-eco)] text-white rounded-lg cursor-pointer  transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90]">
                                 Save Changes
                             </button>
                         </div>
