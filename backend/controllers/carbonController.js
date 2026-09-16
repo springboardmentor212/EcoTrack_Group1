@@ -26,4 +26,26 @@ const createCarbonEntry = async (req, res) => {
     }
 };
 
-module.exports = { createCarbonEntry };
+const getCarbonEntries = async (req, res) => {
+    try {
+        const carbonEntries = await CarbonEntry.find({
+            userId: req.user.userId,
+            isDeleted: false
+        }).sort({ date: -1 });
+
+        res.status(200).json({
+            carbonEntries
+        });
+    } catch (error) {
+        console.error("Get carbon entries error:", error);
+
+        res.status(500).json({
+            message: "Server error."
+        });
+    }
+};
+
+module.exports = {
+    createCarbonEntry,
+    getCarbonEntries
+};
