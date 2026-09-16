@@ -87,8 +87,43 @@ const updateCarbonEntry = async (req, res) => {
     }
 };
 
+const deleteCarbonEntry = async (req, res) => {
+    try {
+        const carbonEntry = await CarbonEntry.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+                isDeleted: false
+            },
+            {
+                isDeleted: true
+            },
+            {
+                new: true
+            }
+        );
+
+        if (!carbonEntry) {
+            return res.status(404).json({
+                message: "Carbon entry not found."
+            });
+        }
+
+        res.status(200).json({
+            message: "Carbon entry deleted successfully."
+        });
+    } catch (error) {
+        console.error("Delete carbon entry error:", error);
+
+        res.status(500).json({
+            message: "Server error."
+        });
+    }
+};
+
 module.exports = {
     createCarbonEntry,
     getCarbonEntries,
-    updateCarbonEntry
+    updateCarbonEntry,
+    deleteCarbonEntry
 };

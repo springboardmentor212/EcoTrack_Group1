@@ -3,7 +3,8 @@ const express = require("express");
 const {
     createCarbonEntry,
     getCarbonEntries,
-    updateCarbonEntry
+    updateCarbonEntry,
+    deleteCarbonEntry
 } = require("../controllers/carbonController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -29,6 +30,12 @@ router.put(
     authMiddleware,
     validateRequiredFields(["category", "value", "unit", "calculatedCO2"]),
     updateCarbonEntry
+);
+
+router.delete(
+    "/:id",
+    authMiddleware,
+    deleteCarbonEntry
 );
 
 module.exports = router;
