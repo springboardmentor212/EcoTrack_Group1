@@ -7,7 +7,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const testRoutes = require("./routes/testRoutes");
-
+const carbonRoutes = require("./routes/carbonRoutes");
 // Database connection
 connectDB();
 
@@ -23,7 +23,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
-
+app.use("/api/carbon", carbonRoutes);
 app.get("/", (req, res) => {
   res.send("EcoTrack Backend API is running");
 });
