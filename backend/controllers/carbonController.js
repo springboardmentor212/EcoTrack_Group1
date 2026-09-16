@@ -45,7 +45,50 @@ const getCarbonEntries = async (req, res) => {
     }
 };
 
+const updateCarbonEntry = async (req, res) => {
+    try {
+        const { category, value, unit, calculatedCO2, date } = req.body;
+
+        const carbonEntry = await CarbonEntry.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+                isDeleted: false
+            },
+            {
+                category,
+                value,
+                unit,
+                calculatedCO2,
+                date
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!carbonEntry) {
+            return res.status(404).json({
+                message: "Carbon entry not found."
+            });
+        }
+
+        res.status(200).json({
+            message: "Carbon entry updated successfully.",
+            carbonEntry
+        });
+    } catch (error) {
+        console.error("Update carbon entry error:", error);
+
+        res.status(500).json({
+            message: "Server error."
+        });
+    }
+};
+
 module.exports = {
     createCarbonEntry,
-    getCarbonEntries
+    getCarbonEntries,
+    updateCarbonEntry
 };
