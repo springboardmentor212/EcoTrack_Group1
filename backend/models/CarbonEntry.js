@@ -26,10 +26,10 @@ const carbonEntrySchema = new mongoose.Schema({
   },
 
   unit: {
-    type: String,
-    enum: ["kg", "kWh", "liters", "km", "t"],
-    required: true
-  },
+  type: String,
+  required: true,
+  trim: true
+},
 
   calculatedCO2: {
     type: Number,

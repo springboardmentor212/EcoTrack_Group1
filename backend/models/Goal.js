@@ -1,5 +1,18 @@
 const mongoose = require("mongoose");
 
+const milestoneSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  _id: true
+});
+
 const goalSchema = new mongoose.Schema({
 
   userId: {
@@ -52,18 +65,7 @@ const goalSchema = new mongoose.Schema({
     min: 0
   },
 
-  milestones: [
-    {
-      title: {
-        type: String,
-        required: true
-      },
-      isCompleted: {
-        type: Boolean,
-        default: false
-      }
-    }
-  ],
+  milestones: [milestoneSchema],
 
   status: {
     type: String,
