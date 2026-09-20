@@ -121,9 +121,52 @@ const deleteCarbonEntry = async (req, res) => {
     }
 };
 
+const searchCarbonEntries = async (req, res) => {
+    try {
+        const { category, from, to } = req.query;
+
+        const filter = {
+            userId: req.user.userId,
+            isDeleted: false
+        };
+
+        if (category) {
+            filter.category = category;
+        }
+
+        if (from || to) {
+            filter.date = {};
+
+            if (from) {
+                filter.date.$gte = new Date(from);
+            }
+
+            if (to) {
+                const endDate = new Date(to);
+                endDate.setHours(23, 59, 59, 999);
+                filter.date.$lte = endDate;
+            }
+        }
+
+        const carbonEntries = await CarbonEntry.find(filter)
+            .sort({ date: -1 });
+
+        res.status(200).json({
+            carbonEntries
+        });
+    } catch (error) {
+        console.error("Search carbon entries error:", error);
+
+        res.status(500).json({
+            message: "Server error."
+        });
+    }
+};
+
 module.exports = {
     createCarbonEntry,
     getCarbonEntries,
     updateCarbonEntry,
-    deleteCarbonEntry
+    deleteCarbonEntry,
+    searchCarbonEntries
 };

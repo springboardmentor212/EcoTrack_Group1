@@ -4,7 +4,8 @@ const {
     createCarbonEntry,
     getCarbonEntries,
     updateCarbonEntry,
-    deleteCarbonEntry
+    deleteCarbonEntry,
+    searchCarbonEntries
 } = require("../controllers/carbonController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -23,6 +24,12 @@ router.get(
     "/",
     authMiddleware,
     getCarbonEntries
+);
+
+router.get(
+    "/search",
+    authMiddleware,
+    searchCarbonEntries
 );
 
 router.put(
