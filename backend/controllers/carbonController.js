@@ -2,16 +2,17 @@ const CarbonEntry = require("../models/CarbonEntry");
 
 const createCarbonEntry = async (req, res) => {
     try {
-        const { category, value, unit, calculatedCO2, date } = req.body;
+        const { category, value, unit, calculatedCO2, date, description } = req.body;
 
         const carbonEntry = await CarbonEntry.create({
-            userId: req.user.userId,
-            category,
-            value,
-            unit,
-            calculatedCO2,
-            date
-        });
+        userId: req.user.userId,
+        category,
+        value,
+        unit,
+        calculatedCO2,
+        date,
+        description
+});
 
         res.status(201).json({
             message: "Carbon entry created successfully.",

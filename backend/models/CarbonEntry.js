@@ -6,31 +6,43 @@ const carbonEntrySchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+
   category: {
     type: String,
     required: true,
     trim: true
   },
+
+  description: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+
   value: {
     type: Number,
     required: true,
     min: 0
   },
+
   unit: {
     type: String,
     required: true,
     trim: true
   },
+
   calculatedCO2: {
     type: Number,
     required: true,
     min: 0
   },
+
   date: {
     type: Date,
     default: Date.now,
     required: true
   },
+
   isDeleted: {
     type: Boolean,
     default: false
