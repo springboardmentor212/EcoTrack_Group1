@@ -2,17 +2,24 @@ const CarbonEntry = require("../models/CarbonEntry");
 
 const createCarbonEntry = async (req, res) => {
     try {
-        const { category, value, unit, calculatedCO2, date, description } = req.body;
+        const {
+            category,
+            value,
+            unit,
+            calculatedCO2,
+            date,
+            description
+        } = req.body;
 
         const carbonEntry = await CarbonEntry.create({
-        userId: req.user.userId,
-        category,
-        value,
-        unit,
-        calculatedCO2,
-        date,
-        description
-});
+            userId: req.user.userId,
+            category,
+            value,
+            unit,
+            calculatedCO2,
+            date,
+            description
+        });
 
         res.status(201).json({
             message: "Carbon entry created successfully.",
@@ -48,32 +55,36 @@ const getCarbonEntries = async (req, res) => {
 
 const updateCarbonEntry = async (req, res) => {
     try {
-        const { category, value, unit, calculatedCO2, date } = req.body;
+        const {
+            category,
+            value,
+            unit,
+            calculatedCO2,
+            description
+        } = req.body;
 
-        const carbonEntry = await CarbonEntry.findOneAndUpdate(
-            {
-                _id: req.params.id,
-                userId: req.user.userId,
-                isDeleted: false
-            },
-            {
-                category,
-                value,
-                unit,
-                calculatedCO2,
-                date
-            },
-            {
-                new: true,
-                runValidators: true
-            }
-        );
+        const carbonEntry = await CarbonEntry.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+            isDeleted: false
+        });
 
         if (!carbonEntry) {
             return res.status(404).json({
                 message: "Carbon entry not found."
             });
         }
+
+        carbonEntry.category = category;
+        carbonEntry.value = value;
+        carbonEntry.unit = unit;
+        carbonEntry.calculatedCO2 = calculatedCO2;
+        carbonEntry.description =
+            description ?? carbonEntry.description;
+        carbonEntry.date =
+            req.body.date || carbonEntry.date;
+
+        await carbonEntry.save();
 
         res.status(200).json({
             message: "Carbon entry updated successfully.",
@@ -124,12 +135,24 @@ const deleteCarbonEntry = async (req, res) => {
 
 const searchCarbonEntries = async (req, res) => {
     try {
-        const { category, from, to } = req.query;
+        const {
+            category,
+            from,
+            to,
+            q
+        } = req.query;
 
         const filter = {
             userId: req.user.userId,
             isDeleted: false
         };
+
+        if (q) {
+            filter.description = {
+                $regex: q,
+                $options: "i"
+            };
+        }
 
         if (category) {
             filter.category = category;
