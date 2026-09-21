@@ -12,8 +12,6 @@ import Challenges from "../pages/Challenges";
 import SearchResults from "../pages/SearchResults";
 import UserProfile from "../pages/UserProfile";
 import EditProfile from "../pages/EditProfile";
-import AccountSettings from "../pages/AccountSettings";
-import PrivacySettings from "../pages/PrivacySettings";
 import Reports from "../pages/Reports";
 import Recommendations from "../pages/Recommendations";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -43,8 +41,6 @@ function AppRoutes() {
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
-        <Route path="/settings" element={<AccountSettings />} />
-        <Route path="/settings/privacy" element={<PrivacySettings />} />
       </Route>
 
       {/* <Route path="*" element={<Navigate to="/LandingPage" replace />} /> */}
