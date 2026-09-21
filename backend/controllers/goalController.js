@@ -2,20 +2,33 @@ const Goal = require("../models/Goal");
 
 const createGoal = async (req, res) => {
   try {
-    const { title, target, unit, deadline } = req.body;
+    const {
+      title,
+      description,
+      category,
+      target,
+      timeframe,
+      unit,
+      deadline,
+      milestones,
+    } = req.body;
 
-    if (!title || !target || !unit || !deadline) {
+    if (!title || !category || !target || !timeframe || !unit || !deadline) {
       return res.status(400).json({
-        message: "All fields are required",
+        message: "All required fields must be provided",
       });
     }
 
     const goal = await Goal.create({
-      user: req.user.userId,
+      userId: req.user.userId,
       title,
+      description,
+      category,
       target,
+      timeframe,
       unit,
       deadline,
+      milestones,
     });
 
     res.status(201).json({
@@ -33,7 +46,7 @@ const createGoal = async (req, res) => {
 const getGoals = async (req, res) => {
   try {
     const goals = await Goal.find({
-      user: req.user.userId,
+      userId: req.user.userId,
     }).sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -49,19 +62,34 @@ const getGoals = async (req, res) => {
 
 const updateGoal = async (req, res) => {
   try {
-    const { title, target, current, unit, deadline, status } = req.body;
+    const {
+      title,
+      description,
+      category,
+      target,
+      timeframe,
+      currentValue,
+      unit,
+      deadline,
+      milestones,
+      status,
+    } = req.body;
 
     const goal = await Goal.findOneAndUpdate(
       {
         _id: req.params.id,
-        user: req.user.userId,
+        userId: req.user.userId,
       },
       {
         title,
+        description,
+        category,
         target,
-        current,
+        timeframe,
+        currentValue,
         unit,
         deadline,
+        milestones,
         status,
       },
       {
