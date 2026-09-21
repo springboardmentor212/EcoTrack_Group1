@@ -35,7 +35,6 @@ router.get(
 router.put(
     "/:id",
     authMiddleware,
-    validateRequiredFields(["category", "value", "unit", "calculatedCO2"]),
     updateCarbonEntry
 );
 

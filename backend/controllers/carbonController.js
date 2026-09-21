@@ -10,14 +10,14 @@ const createCarbonEntry = async (req, res) => {
             date,
             description
         } = req.body;
-
+        const finalCO2 = calculatedCO2 || value || 0;
         const carbonEntry = await CarbonEntry.create({
             userId: req.user.userId,
             category,
             value,
             unit,
-            calculatedCO2,
-            date,
+            calculatedCO2: finalCO2,
+            date: date || undefined,
             description
         });
 
@@ -36,13 +36,28 @@ const createCarbonEntry = async (req, res) => {
 
 const getCarbonEntries = async (req, res) => {
     try {
-        const carbonEntries = await CarbonEntry.find({
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+        const skip = (page - 1) * limit;
+
+        const filter = {
             userId: req.user.userId,
             isDeleted: false
-        }).sort({ date: -1 });
+        };
+
+        const totalEntries = await CarbonEntry.countDocuments(filter);
+
+        const carbonEntries = await CarbonEntry.find(filter)
+            .sort({ date: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalPages = Math.ceil(totalEntries / limit);
 
         res.status(200).json({
-            carbonEntries
+            carbonEntries,
+            totalPages,
+            totalEntries
         });
     } catch (error) {
         console.error("Get carbon entries error:", error);
@@ -75,10 +90,10 @@ const updateCarbonEntry = async (req, res) => {
             });
         }
 
-        carbonEntry.category = category;
-        carbonEntry.value = value;
-        carbonEntry.unit = unit;
-        carbonEntry.calculatedCO2 = calculatedCO2;
+        carbonEntry.category = category ?? carbonEntry.category;
+        carbonEntry.value = value ?? carbonEntry.value;
+        carbonEntry.unit = unit ?? carbonEntry.unit;
+        carbonEntry.calculatedCO2 = calculatedCO2 ?? carbonEntry.calculatedCO2;
         carbonEntry.description =
             description ?? carbonEntry.description;
         carbonEntry.date =
@@ -148,10 +163,20 @@ const searchCarbonEntries = async (req, res) => {
         };
 
         if (q) {
-            filter.description = {
-                $regex: q,
-                $options: "i"
-            };
+            filter.$or = [
+                {
+                    description: {
+                        $regex: q,
+                        $options: "i"
+                    }
+                },
+                {
+                    category: {
+                        $regex: q,
+                        $options: "i"
+                    }
+                }
+            ];
         }
 
         if (category) {
