@@ -10,7 +10,6 @@ const NAV_ITEMS = [
     { to: "/reports", icon: FileText, label: "Reports"},
     { to: "/recommendations", icon: Sparkles, label: "Recommendations"},
     { to: "/profile", icon: User, label: "Profile"},
-    { to: "/settings", icon: SettingsIcon, label: "Settings" },
 ];
 
 export default function Sidebar({ userName, userTag, userInitial}){

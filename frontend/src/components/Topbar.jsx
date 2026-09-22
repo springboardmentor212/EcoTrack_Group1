@@ -1,7 +1,16 @@
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, LogOut } from "lucide-react";
 import defaultAvatar from "../assets/avatar.png"
+import { useNavigate } from "react-router-dom";
 
 export default function Topbar({ ecoScore, children, profilePic }) {
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  }
+
   return (
     <header className="flex items-center justify-between px-8 py-3 border-b border-[var(--color-slate)]-100 bg-[var(--color-surface)]">
       <div className="flex items-center justify-between mb-2">
@@ -30,13 +39,12 @@ export default function Topbar({ ecoScore, children, profilePic }) {
           Eco Score: {ecoScore}
         </span>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-7">
         <Bell size={20} className="text-[var(--color-slate)]" />
-        <img
-        src={profilePic || defaultAvatar}
-        alt="User avatar"
-        className="h-8 w-8 rounded-full object-cover border border-[var(--color-slate)]"
-        />
+        <button onClick={handleLogout}
+        className="flex items-center gap-2 rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-900 cursor-pointer">
+          <LogOut size={16} /> Logout
+        </button>
       </div>
     </header>
   );

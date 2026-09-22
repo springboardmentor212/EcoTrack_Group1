@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
+import GoalModal from "../components/GoalModal";
 
 const milestones = [
   { label: "Install Smart Power Monitors", done: true },
@@ -8,6 +10,7 @@ const milestones = [
 ];
 
 export default function GoalDetail() {
+  const [isEditModalOpen, setIsEditModalOpen]=useState(false);
   const { id } = useParams();
 
   return (
@@ -26,7 +29,7 @@ export default function GoalDetail() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 text-sm bg-[var(--color-eco)] text-white rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90] antialiased">
+          <button onClick={()=> setIsEditModalOpen(true)} className="px-4 py-2 text-sm bg-[var(--color-eco)] text-white rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90] antialiased">
             Edit Goal
           </button>
           {/* <button className="px-4 py-2 text-sm border border-red-300 text-red-500 rounded-lg font-bold cursor-pointer">
@@ -87,6 +90,16 @@ export default function GoalDetail() {
             </p>
         </div>
       </div>
+
+      <GoalModal
+      isOpen={isEditModalOpen}
+      onClose={()=>setIsEditModalOpen(false)}
+      editGoal={{title: "Reduce Commute Carbon", targetValue: "80.00"}}
+      onSave={(updated)=> {
+        console.log("Goal updated:", updated);
+        setIsEditModalOpen(false);
+      }}
+      />
     </div>
   );
 }

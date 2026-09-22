@@ -1,11 +1,11 @@
 import React from "react";
 
-const AccountSettings = () => {
+const Reports = () => {
     return (
         <div style={{ padding: "2rem", textAlign: "center", fontSize: "50px"}}>
-            <h1>Account Settings</h1>
+            <h1>Reports</h1>
         </div>
     );
 };
 
-export default AccountSettings;
+export default Reports;

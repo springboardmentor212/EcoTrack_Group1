@@ -1,4 +1,4 @@
-import { Search, Bell, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import StatCard from "../components/StatCard";
 import GoalRow from "../components/GoalRow";
 import CategoryRow from "../components/CategoryRow";
