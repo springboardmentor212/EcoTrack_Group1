@@ -7,6 +7,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const testRoutes = require("./routes/testRoutes");
+const carbonRoutes = require("./routes/carbonRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 
@@ -25,6 +26,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api/carbon", carbonRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
 
