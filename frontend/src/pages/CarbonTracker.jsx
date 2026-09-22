@@ -1,5 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Search, Download, CirclePlus, SquarePlus, Plus } from "lucide-react";
+import { Search, Download, CirclePlus, SquarePlus, Plus, Info } from "lucide-react";
+import { useState } from "react";
+import LogEntryModal from "../components/LogEntryModal";
+import EmissionBreakdownModal from "../components/EmissionBreakdownModal";
 
 const logs = [
   {
@@ -37,7 +40,16 @@ const logs = [
 ];
 
 export default function CarbonTracker() {
+  const [isLogEntryModalOpen, setIsLogEntryModalOpen] = useState(false);
+  const [isLogs, setIsLogs]=useState(logs);
+  const [selectedLogForBreakdown, setSelectedLogForBreakdown]=useState(null);
   const navigate = useNavigate();
+
+  const handleEntryAdded=(newEntry)=>{
+    if(newEntry){
+      setIsLogs((prevLogs)=>[newEntry, ...prevLogs]);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,7 +57,7 @@ export default function CarbonTracker() {
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">
           Carbon Log History
         </h1>
-        <button className="group flex items-center gap-2 text-sm antialiased bg-[var(--color-eco)] text-white px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90]">
+        <button onClick={()=>setIsLogEntryModalOpen(true)} className="group flex items-center gap-2 text-sm antialiased bg-[var(--color-eco)] text-white px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90]">
           <Plus
             size={20}
             className="transition-transform duration-300 ease-in-out group-hover:rotate-90"
@@ -121,6 +133,17 @@ export default function CarbonTracker() {
                   <td className="px-5 py-3 text-[var(--color-slate)]">
                     {log.type}
                   </td>
+                  <td className="px-5 py-3">
+                    <button
+                    onClick={(e)=>{
+                      e.stopPropagation();
+                      setSelectedLogForBreakdown(log);
+                    }}
+                    className="flex items-center gap-1 text-xs text-teal-600 hover:underline"
+                    >
+                      <Info size={14} /> View BreakDown
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -139,6 +162,19 @@ export default function CarbonTracker() {
           </div>
         </div>
       </div>
+
+      <LogEntryModal
+      isOpen={isLogEntryModalOpen}
+      onClose={()=> setIsLogEntryModalOpen(false)}
+      onSuccess={handleEntryAdded}
+      />
+
+      {selectedLogForBreakdown && (
+        <EmissionBreakdownModal
+        entry={selectedLogForBreakdown}
+        onClose={()=>setSelectedLogForBreakdown(null)}
+        />
+      )}
     </div>
   );
 }

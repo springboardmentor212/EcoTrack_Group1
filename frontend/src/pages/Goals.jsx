@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GoalCard from "../components/GoalCard";
+import GoalModal from "../components/GoalModal";
 
 const allGoals = [
     { id: 1, category: "Transportation", title: "Reduce Commute Carbon", percent: 100, target: "80 kg", deadline: "Nov 30, 2026", status: "Completed"},
@@ -11,6 +12,7 @@ const allGoals = [
 const tabs = ["All", "Active", "Completed", "Behind Schedule"];
 
 export default function Goals() {
+    const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
     const [tab, setTab] = useState("All");
 
     const filtered = allGoals.filter((g) => {
@@ -27,7 +29,7 @@ export default function Goals() {
                     <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sustainability Goals</h1>
                     <p className="text-sm text-[var(--color-slate)] mt-1">6 Active · 14 Completed This Year</p>
                 </div>
-                <button className="bg-[var(--color-eco)] text-white text-sm px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90] antialiased">
+                <button onClick={() => setIsGoalModalOpen(true)} className="bg-[var(--color-eco)] text-white text-sm px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90] antialiased">
                     Create New Goal
                 </button>
             </div>
@@ -51,6 +53,15 @@ export default function Goals() {
                     <GoalCard key={goal.id} {...goal} />
                 ))}
             </div>
+
+            <GoalModal
+            isOpen={isGoalModalOpen}
+            onClose={()=>setIsGoalModalOpen(false)}
+            onSave={(goalData) => {
+                console.log("Goal created:", goalData);
+                setIsGoalModalOpen(false);
+            }}
+            />
         </div>
     );
 }

@@ -1,11 +1,11 @@
 import React from "react";
 
-const PrivacySettings = () => {
+const Recommendations = () => {
     return (
         <div style={{ padding: "2rem", textAlign: "center", fontSize: "50px"}}>
-            <h1>Privacy Settings</h1>
+            <h1>Recommendations</h1>
         </div>
     );
 };
 
-export default PrivacySettings;
+export default Recommendations;
