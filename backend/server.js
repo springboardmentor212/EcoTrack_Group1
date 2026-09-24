@@ -10,8 +10,8 @@ const testRoutes = require("./routes/testRoutes");
 const carbonRoutes = require("./routes/carbonRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const searchRoutes = require("./routes/searchRoutes");
 
-// Database connection
 connectDB();
 
 console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
@@ -19,22 +19,20 @@ console.log("EMAIL_PASS loaded:", !!process.env.EMAIL_PASS);
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
 app.use("/api/carbon", carbonRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/search", searchRoutes);
 
 app.get("/", (req, res) => {
   res.send("EcoTrack Backend API is running");
 });
 
-// Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
