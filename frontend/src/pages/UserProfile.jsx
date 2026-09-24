@@ -1,29 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { getProfile, deleteAccount } from "../services/profileService";
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [profile, setProfile] = useState(null);
 
-  const [profile, setProfile] = useState({
-    fullName: "Trapti Singh",
-    email: "Trapti@example.com",
-    phone: "+91 7908093489",
-    location: "Delhi, India",
-    bio: "Passionate about sustainability and green living.",
-    memberSince: "2024-01-15",
-  });
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const profileData = await getProfile();
+        setProfile(profileData);
+      } catch (err) {
+        setError("Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleDelete = async () => {
     if (
       !window.confirm("Delete your account permanently? This cannot be undone.")
     )
       return;
-    toast.success("UI Preview: Account deletion simulated");
-    navigate("/login");
+    try {
+      await deleteAccount();
+      toast.success("Account deleted successfully");
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (err) {
+      toast.error("Failed to delete account");
+    }
   };
 
   if (error) return <p className="text-sm text-red-500">{error}</p>;
@@ -38,7 +52,7 @@ export default function UserProfile() {
     : "";
 
   const details = [
-    ["Email", profile?.email],
+    ["Email", profile?.email || "Not added"],
     ["Phone", profile?.phone || "Not added"],
     ["Location", profile?.location || "Not added"],
   ];
@@ -142,7 +156,7 @@ export default function UserProfile() {
             </p>
             <button
               onClick={handleDelete}
-              className="text-sm bg-red-500 text-white px-4 py-2 rounded-lg"
+              className="text-sm bg-red-500 text-white px-4 py-2 rounded-lg cursor-pointer"
             >
               Delete Account
             </button>

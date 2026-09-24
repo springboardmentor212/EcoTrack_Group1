@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { getProfile, updateProfile } from "../services/profileService";
 
 export default function EditProfile() {
   const navigate = useNavigate();
@@ -14,6 +15,24 @@ export default function EditProfile() {
     bio: "Passionate about sustainability and green living.",
   });
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profileData = await getProfile();
+        setEmail(profileData.email); // ✅ populate email
+        setForm({
+          fullName: profileData.fullName || "",
+          phone: profileData.phone || "",
+          location: profileData.location || "",
+          bio: profileData.bio || "",
+        });
+      } catch (err) {
+        toast.error("Failed to load profile");
+      }
+    };
+    fetchProfile();
+  }, []);
+
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
@@ -24,11 +43,14 @@ export default function EditProfile() {
     }
     setSaving(true);
 
-    setTimeout(() => {
-      setSaving(false);
-      toast.success("Profile updated (UI Preview)");
+    try {
+      const updated = await updateProfile(form);
+      toast.success("Profile updated successfully");
+      console.log("Updated profile:", updated); // ✅ see the updated object
       navigate("/profile");
-    }, 500);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile");
+    }
   };
 
   const inputClass =

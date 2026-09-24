@@ -2,108 +2,100 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const transporter = require("../config/email");
+const Profile = require("../models/Profile");
 
-// Generate a 6-digit OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// ==================== REGISTER ====================
 const registerUser = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        // Check if all required fields are provided
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                message: "Name, email and password are required."
-            });
-        }
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
-            return res.status(400).json({
-                message: "User already exists."
-            });
-        }
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        // Create the user
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword
-        });
-        // Generate JWT token
-        const token = generateToken(user._id, user.role);
-        res.status(201).json({
-            message: "User registered successfully.",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            },
-            token
-        });
-    } catch (error) {
-        console.error("Register error:", error);
-
-        res.status(500).json({
-            message: "Server error."
-        });
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required.",
+      });
     }
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists.",
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    await Profile.create({
+      user: user._id,
+      fullName: user.name,
+    });
+
+    const token = generateToken(user._id, user.role);
+    res.status(201).json({
+      message: "User registered successfully.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+
+    res.status(500).json({
+      message: "Server error.",
+    });
+  }
 };
 
-// ==================== LOGIN ====================
 const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        // Check if email and password are provided
-        if (!email || !password) {
-            return res.status(400).json({
-                message: "Email and password are required."
-            });
-        }
-        // Find user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({
-                message: "Invalid email or password."
-            });
-        }
-        // Compare entered password with hashed password
-        const isPasswordCorrect = await bcrypt.compare(
-            password,
-            user.password
-        );
-        if (!isPasswordCorrect) {
-            return res.status(401).json({
-                message: "Invalid email or password."
-            });
-        }
-        // Generate JWT token
-        const token = generateToken(user._id, user.role);
-        res.status(200).json({
-            message: "Login successful.",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            },
-            token
-        });
-    } catch (error) {
-        console.error("Login error:", error);
-
-        res.status(500).json({
-            message: "Server error."
-        });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
     }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    const token = generateToken(user._id, user.role);
+    res.status(200).json({
+      message: "Login successful.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    res.status(500).json({
+      message: "Server error.",
+    });
+  }
 };
 
-// 1. Forgot Password - Generate and send OTP
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -122,22 +114,17 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate OTP
     const otp = generateOTP();
 
-    // Hash OTP before storing it
     const hashedOTP = await bcrypt.hash(otp, 10);
 
-    // Save hashed OTP and expiry time
     user.resetOTP = hashedOTP;
     user.resetOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // New OTP means previous verification is no longer valid
     user.resetOTPVerified = false;
 
     await user.save();
 
-    // Send OTP to user's email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -157,7 +144,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// 2. Verify OTP
 const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -176,14 +162,12 @@ const verifyOTP = async (req, res) => {
       });
     }
 
-    // Check OTP expiry
     if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
       return res.status(400).json({
         message: "OTP has expired",
       });
     }
 
-    // Compare entered OTP with hashed OTP
     const isOTPValid = await bcrypt.compare(otp, user.resetOTP);
 
     if (!isOTPValid) {
@@ -192,7 +176,6 @@ const verifyOTP = async (req, res) => {
       });
     }
 
-    // Mark OTP as verified
     user.resetOTPVerified = true;
     await user.save();
 
@@ -208,7 +191,6 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// 3. Reset Password
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -227,21 +209,18 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Check whether OTP was verified
     if (!user.resetOTPVerified) {
       return res.status(400).json({
         message: "Please verify OTP first",
       });
     }
 
-    // Check OTP expiry
     if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
       return res.status(400).json({
         message: "OTP has expired",
       });
     }
 
-    // Compare entered OTP with hashed OTP
     const isOTPValid = await bcrypt.compare(otp, user.resetOTP);
 
     if (!isOTPValid) {
@@ -250,11 +229,9 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash the new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Clear OTP data after successful password reset
     user.resetOTP = "";
     user.resetOTPExpiry = null;
     user.resetOTPVerified = false;
@@ -273,11 +250,10 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// ==================== EXPORT ====================
 module.exports = {
-    registerUser,
-    loginUser,
-    forgotPassword,
-    verifyOTP,
-    resetPassword,
+  registerUser,
+  loginUser,
+  forgotPassword,
+  verifyOTP,
+  resetPassword,
 };
