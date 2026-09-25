@@ -1,5 +1,3 @@
-import Sidebar from "../components/Sidebar";
-import TopBar from "../components/TopBar";
 import RecommendationCard from "../components/RecommendationCard";
 import AIInsightsWidget from "../components/AIInsightsWidget";
 
@@ -9,6 +7,7 @@ function Recommendations() {
       category: "Transportation",
       title: "Try carpooling on your commute",
       reduction: "120 kg CO₂",
+      description: "brings Transportation back under cap",
     },
     {
       category: "Energy",
@@ -17,37 +16,34 @@ function Recommendations() {
     },
     {
       category: "Water",
-      title: "Take shorter showers",
+      title: "Shorter showers this week",
       reduction: "15 kg CO₂",
     },
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
+    <main className="flex-1 bg-slate-50 px-6 pb-8">
+      <div className="w-full">
+        <AIInsightsWidget
+          category="Transportation"
+          message="The suggestions below focus on that category first."
+        />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
-
-        <main className="flex-1 p-6">
-          <AIInsightsWidget
-            category="Transportation"
-            message="The suggestions below focus on that category first."
-          />
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <section className="mt-4">
+          <div className="grid grid-cols-3 gap-4">
             {recommendations.map((recommendation) => (
               <RecommendationCard
                 key={recommendation.title}
                 category={recommendation.category}
                 title={recommendation.title}
                 reduction={recommendation.reduction}
+                description={recommendation.description}
               />
             ))}
           </div>
-        </main>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
