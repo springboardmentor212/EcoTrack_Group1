@@ -42,8 +42,6 @@ function AppRoutes() {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
       </Route>
-
-      {/* <Route path="*" element={<Navigate to="/LandingPage" replace />} /> */}
     </Routes>
   );
 }

@@ -1,57 +1,73 @@
-import { Flower, Home, Zap, Target, Trophy, FileText, Search, Sparkles, User, Settings as SettingsIcon } from "lucide-react";
-import { Link, useLocation} from "react-router-dom";
+import {
+  Home,
+  Lightbulb,
+  Trophy,
+  Bell,
+  LogOut,
+} from "lucide-react";
 
-const NAV_ITEMS = [
-    { to: "/user-dashboard", icon: Home, label: "Dashboard" },
-    { to: "/carbon-tracker", icon: Zap, label: "Carbon Tracker" },
-    { to: "/goals", icon: Target, label: "Goals" },
-    { to: "/challenges", icon: Trophy, label: "Challenges"},
-    {to : "/search", icon: Search, label: "Search"},
-    { to: "/reports", icon: FileText, label: "Reports"},
-    { to: "/recommendations", icon: Sparkles, label: "Recommendations"},
-    { to: "/profile", icon: User, label: "Profile"},
-];
+function Sidebar() {
+  return (
+    <aside className="flex min-h-screen w-56 flex-col bg-slate-900 px-4 py-6 text-white">
+      <div className="mb-8 flex items-center gap-2 px-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+          🌱
+        </div>
 
-export default function Sidebar({ userName, userTag, userInitial}){
-    const location = useLocation();
+        <span className="text-lg font-bold">EcoTrack</span>
+      </div>
 
-    return(
-        <aside className="w-64 flex-shrink-0 bg-[var(--color-primary)] flex flex-col h-screen">
-            <div className="flex items-center gap-2 p-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
-                    <Flower size={18} color="#FFFFFF" />
-                </div>
-                <span className="text-lg font-bold text-white">EcoTrack</span>
-            </div>
+      <nav className="flex flex-1 flex-col gap-2">
+        <a
+          href="/user-dashboard"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+        >
+          <Home size={18} />
+          Dashboard
+        </a>
 
-            <nav className="flex-1 px-4 flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => {
-                    const isActive =
-                    location.pathname === item.to || location.pathname.startsWith(item.to + "/");
-                    return (
-                        <Link
-                        key={item.to}
-                        to={item.to}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                            isActive ? "bg-[var(--color-secondary)] font-medium" : "text-white/70 hover;bg-white/5"
-                        }`}
-                        >
-                        <item.icon size={18} />
-                        {item.label}
-                        </Link>
-                    )
-                })}
-            </nav>
+        <a
+          href="/recommendations"
+          className="flex items-center gap-3 rounded-lg bg-slate-800 px-3 py-2 text-sm"
+        >
+          <Lightbulb size={18} />
+          Recommendations
+        </a>
 
-            <div className="p-4 flex items-center gap-3 border-t border-white/10">
-            <div className="h-9 w-9 rounded-full bg-[var(--color-eco)] flex items-center justify-center text-white font-semibold text-sm">
-                {userInitial}
-            </div>
-            <div>
-                <p className="text-sm font-medium text-white">{userName}</p>
-                <p className="text-xs text-white/60">{userTag}</p>
-            </div>
-            </div>
-        </aside>
-    )
+        <a
+          href="/challenges"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+        >
+          <Trophy size={18} />
+          Challenges
+        </a>
+
+        <a
+          href="/leaderboard"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+        >
+          <Trophy size={18} />
+          Leaderboard
+        </a>
+
+        <a
+          href="/notifications"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+        >
+          <Bell size={18} />
+          Notifications
+        </a>
+      </nav>
+
+      <a
+        href="/login"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-800"
+      >
+        <LogOut size={18} />
+        Logout
+      </a>
+    </aside>
+  );
 }
+
+export default Sidebar;
