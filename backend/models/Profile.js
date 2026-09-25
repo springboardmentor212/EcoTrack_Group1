@@ -30,28 +30,8 @@ const profileSchema = new mongoose.Schema(
       maxlength: 200,
       default: "",
     },
-    profilePicture: {
-      type: String,
-      default: "",
-    },
-    sustainabilityPreferences: {
-      type: [String],
-      default: [],
-    },
-    environmentalInterests: {
-      type: [String],
-      default: [],
-    },
-    personalGoalPreferences: {
-      type: [String],
-      default: [],
-    },
-    lifestyleConfiguration: {
-      type: String,
-      default: "",
-    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Profile", profileSchema);

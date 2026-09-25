@@ -10,9 +10,6 @@ const router = express.Router();
 
 router.use(protect);
 
-router.route("/")
-  .get(getProfile)
-  .put(updateProfile)
-  .delete(deleteAccount);
+router.route("/").get(getProfile).put(updateProfile).delete(deleteAccount);
 
 module.exports = router;

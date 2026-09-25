@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { createCarbonEntry } from "../services/carbonService";
 
-export default function LogEntryModal({ isOpen, onClose, onSave }) {
+export default function LogEntryModal({ isOpen, onClose, onSuccess }) {
   const [activeTab, setActiveTab] = useState("Transportation");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const [transport, setTransport] = useState({
     type: "Car (Gasoline)",
@@ -10,19 +13,28 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
     distance: "42.5",
     unit: "km",
     duration: "35 mins",
-    date: "2026-10-24",
+    date: new Date().toISOString().slice(0, 10),
     notes: "Weekly office commute via Highway 101.",
   });
+
+  function getCurrentBillingPeriod() {
+    const now = new Date();
+    const year = now.getFullYear();
+
+    const monthName = now.toLocaleString("default", { month: "short" });
+
+    return `${monthName} 1 - ${monthName} ${new Date(year, now.getMonth() + 1, 0).getDate()}`;
+  }
 
   const [energy, setEnergy] = useState({
     source: "Electricity",
     amount: "320",
     unit: "kWh",
-    billingPeriod: "Oct 1 - Oct 31",
+    billingPeriod: getCurrentBillingPeriod(),
     provider: "EcoGrid Power",
     renewableMix: true,
-    notes: "Any householdappliance upates or extra usage details...",
-    date: "2026-10-24",
+    notes: "Any household appliance updates or extra usage details...",
+    date: new Date().toISOString().slice(0, 10),
   });
 
   const [food, setFood] = useState({
@@ -30,7 +42,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
     dietProfile: "Plant Based",
     servingSize: "Medium",
     items: ["Vegetables", "Grains"],
-    date: "2026-10-24",
+    date: new Date().toISOString().slice(0, 10),
     notes: "e.g. organic, locally sourced",
   });
 
@@ -39,9 +51,9 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
     weight: "8.4",
     unit: "kg",
     disposalRoute: "Curbside Pickup",
-    disposalDate: "2026-10-24",
+    disposalDate: new Date().toISOString().slice(0, 10),
     hazardous: false,
-    notes: "Corrrugated cardboard boxes and plastic containers from shipping.",
+    notes: "Corrugated cardboard boxes and plastic containers from shipping.",
   });
 
   const [water, setWater] = useState({
@@ -50,7 +62,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
     unit: "L",
     frequency: "Weekly",
     source: "Municipal",
-    date: "2026-10-24",
+    date: new Date().toISOString().slice(0, 10),
     notes: "Eco-cold load",
   });
 
@@ -75,17 +87,87 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const buildPayload = () => {
+    const calculatedCO2 = parseFloat(getImpact());
+
+    if (activeTab === "Transportation") {
+      return {
+        category: "Transportation",
+        value: parseFloat(transport.distance || 0),
+        unit: transport.unit,
+        calculatedCO2,
+        date: transport.date,
+        description: `${transport.type} • ${transport.vehicleClass}${
+          transport.notes ? ` • ${transport.notes}` : ""
+        }`,
+      };
+    }
+
+    if (activeTab === "Energy") {
+      return {
+        category: "Energy",
+        value: parseFloat(energy.amount || 0),
+        unit: energy.unit,
+        calculatedCO2,
+        date: energy.date,
+        description: `${energy.source}${
+          energy.notes ? ` • ${energy.notes}` : ""
+        }`,
+      };
+    }
+
+    if (activeTab === "Food") {
+      return {
+        category: "Food",
+        value: 1,
+        unit: "serving",
+        calculatedCO2,
+        date: food.date,
+        description: `${food.meal} • ${food.dietProfile}${
+          food.items.length ? ` • ${food.items.join(", ")}` : ""
+        }`,
+      };
+    }
+
+    if (activeTab === "Waste") {
+      return {
+        category: "Waste",
+        value: parseFloat(waste.weight || 0),
+        unit: waste.unit,
+        calculatedCO2,
+        date: waste.disposalDate,
+        description: `${waste.category} • ${waste.disposalRoute}${
+          waste.hazardous ? " • Hazardous" : ""
+        }`,
+      };
+    }
+
+    return {
+      category: "Water",
+      value: parseFloat(water.volume || 0),
+      unit: water.unit,
+      calculatedCO2,
+      date: water.date,
+      description: `${water.activity} • ${water.frequency}`,
+    };
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let payload = { category: activeTab, impact: getImpact() };
-
-    if (activeTab === "Transportation") payload = { ...payload, ...transport };
-    if (activeTab === "Energy") payload = { ...payload, ...energy };
-    if (activeTab === "Food") payload = { ...payload, ...food };
-    if (activeTab === "Waste") payload = { ...payload, ...waste };
-    if (activeTab === "Water") payload = { ...payload, ...water };
-
-    onSave(payload);
+    setError("");
+    setSubmitting(true);
+    try {
+      const payload = buildPayload();
+      const res = await createCarbonEntry(payload);
+      onSuccess?.(res.data.carbonEntry);
+      onClose();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Couldn't save this entry. Try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleFoodItem = (item) => {
@@ -99,8 +181,8 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-[var(--color-surface)] w-full max-w-xl rounded-2xl p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-[var(--color-slate)]/20 mb-4">
+      <div className="bg-[var(--color-surface)] w-full max-w-xl rounded-2xl p-5 shadow-xl relative ">
+        <div className="flex items-center justify-between pb-2 border-b border-[var(--color-slate)]/20 mb-3">
           <h2 className="text-xl font-bold text-[var(--color-primary)]">
             Log Activity
           </h2>
@@ -112,7 +194,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
           </button>
         </div>
 
-        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 border-b border-[var(--color-slate)]/10">
+        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 border-b border-[var(--color-slate)]/10">
           {["Transportation", "Energy", "Food", "Waste", "Water"].map((cat) => (
             <button
               key={cat}
@@ -129,10 +211,10 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {activeTab === "Transportation" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Transport Type
@@ -150,29 +232,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                     <option>Bicycle / Walking</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-[var(--color-slate)]">
-                    Vehicle Class
-                  </label>
-                  <select
-                    value={transport.vehicleClass}
-                    onChange={(e) =>
-                      setTransport({
-                        ...transport,
-                        vehicleClass: e.target.value,
-                      })
-                    }
-                    className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
-                  >
-                    <option>SUV (Mid-size)</option>
-                    <option>Sedan (Standard)</option>
-                    <option>Compact Car</option>
-                    <option>Bus / Transit</option>
-                  </select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-[var(--color-slate)]">
@@ -204,6 +264,9 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                     className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Duration (optional)
@@ -217,9 +280,6 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                     className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Date
@@ -240,12 +300,12 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                   Notes
                 </label>
                 <textarea
-                  rows={2}
+                  rows={1}
                   value={transport.notes}
                   onChange={(e) =>
                     setTransport({ ...transport, notes: e.target.value })
                   }
-                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none resize-none"
                 />
               </div>
             </>
@@ -253,7 +313,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "Energy" && (
             <>
-              <div className="grid grid-cols-2 gap-4 items-start">
+              <div className="grid grid-cols-2 gap-3 items-start">
                 <div>
                   <label className="block text-xs font-medium text-[var(--color-slate)] mb-1">
                     Energy Source
@@ -337,14 +397,12 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                   Renewable Energy Mix (45%)
                 </label>
               </div>
-
-              
             </>
           )}
 
           {activeTab === "Food" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Meal
@@ -447,10 +505,10 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                   Notes
                 </label>
                 <textarea
-                  rows={2}
+                  rows={1}
                   value={food.notes}
                   onChange={(e) => setFood({ ...food, notes: e.target.value })}
-                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none resize-none"
                 />
               </div>
             </>
@@ -458,7 +516,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "Waste" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Waste Category
@@ -561,12 +619,12 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                   Item Description / Notes
                 </label>
                 <textarea
-                  rows={2}
+                  rows={1}
                   value={waste.notes}
                   onChange={(e) =>
                     setWaste({ ...waste, notes: e.target.value })
                   }
-                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none resize-none"
                 />
               </div>
             </>
@@ -574,7 +632,7 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "Water" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-[var(--color-slate)]">
                     Water Activity
@@ -674,35 +732,43 @@ export default function LogEntryModal({ isOpen, onClose, onSave }) {
                   Notes (optional)
                 </label>
                 <textarea
-                  rows={2}
+                  rows={1}
                   value={water.notes}
                   onChange={(e) =>
                     setWater({ ...water, notes: e.target.value })
                   }
-                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+                  className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none resize-none"
                 />
               </div>
             </>
           )}
 
-          <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl flex items-center justify-between text-sm mt-4">
+          {error && (
+            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl flex items-center justify-between text-sm mt-3">
             <span>Estimated Impact:</span>
             <span className="font-bold text-base">~{getImpact()} kg CO₂</span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-[var(--color-slate)]/10">
+          <div className="flex justify-end gap-3 pt-2 border-t border-[var(--color-slate)]/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[var(--color-slate)]/40 rounded-lg text-sm cursor-pointer hover:bg-gray-50"
+              disabled={submitting}
+              className="px-4 py-2 border border-[var(--color-slate)]/40 rounded-lg text-sm cursor-pointer hover:bg-gray-50 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[var(--color-eco)] text-white rounded-lg text-sm font-medium cursor-pointer hover:brightness-95"
+              disabled={submitting}
+              className="px-4 py-2 bg-[var(--color-eco)] text-white rounded-lg text-sm font-medium cursor-pointer hover:brightness-95 disabled:opacity-50"
             >
-              Log {activeTab}
+              {submitting ? "Saving..." : `Log ${activeTab}`}
             </button>
           </div>
         </form>

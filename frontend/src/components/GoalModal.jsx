@@ -1,45 +1,52 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
+const emptyForm = {
+  title: "",
+  description: "",
+  category: "Transportation",
+  target: "50",
+  timeframe: "Monthly",
+  deadline: "2026-12-31",
+};
+
 export default function GoalModal({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   editGoal = null,
 }) {
-  const [form, setForm] = useState({
-    title: "",
-    category: "Transportation",
-    targetValue: "80.00",
-    unit: "kg CO2",
-    baseline: "124",
-    deadline: "2026-12-31",
-    reminderFrequency: "Weekly",
-    priority: "Medium",
-    notes: "",
-  });
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (editGoal) {
       setForm({
-        title: editGoal.title || "Reduce Commute Carbon",
+        title: editGoal.title || "",
+        description: editGoal.description || "",
         category: editGoal.category || "Transportation",
-        targetValue: editGoal.targetValue || "80.00",
-        unit: editGoal.unit || "kg CO2",
-        baseline: editGoal.baseline || "124",
-        deadline: editGoal.deadline || "2026-12-31",
-        reminderFrequency: editGoal.reminderFrequency || "Weekly",
-        priority: editGoal.priority || "Medium",
-        notes: editGoal.notes || "",
+        target: editGoal.target ?? "50",
+        timeframe: editGoal.timeframe || "Monthly",
+        deadline: editGoal.deadline
+          ? editGoal.deadline.slice(0, 10)
+          : "2026-12-31",
       });
+    } else {
+      setForm(emptyForm);
     }
-  }, [editGoal]);
+  }, [editGoal, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(form);
+    setSaving(true);
+    try {
+      await onSave({ ...form, target: Number(form.target) });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -64,7 +71,7 @@ export default function GoalModal({
             </label>
             <input
               type="text"
-              placeholder="e.g. Reduce daily commute footprint"
+              placeholder="e.g. Lower household electricity usage"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
@@ -74,7 +81,7 @@ export default function GoalModal({
 
           <div>
             <label className="text-xs font-medium text-[var(--color-slate)]">
-              Goal Category
+              Category
             </label>
             <select
               value={form.category}
@@ -87,65 +94,35 @@ export default function GoalModal({
               <option>Waste</option>
               <option>Water</option>
             </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-[var(--color-slate)]">
-                Target Value
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.targetValue}
-                onChange={(e) =>
-                  setForm({ ...form, targetValue: e.target.value })
-                }
-                className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-[var(--color-slate)]">
-                Unit
-              </label>
-              <input
-                type="text"
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="bg-gray-50 p-3 rounded-xl border border-[var(--color-slate)]/20 text-xs">
-            <span className="font-semibold text-[var(--color-primary)]">
-              Current Baseline (Auto-populated):
-            </span>
-            <p className="text-[var(--color-slate)] mt-0.5">
-              Based on last month: {form.baseline} kg CO₂ / week
+            <p className="text-[10px] text-[var(--color-slate)] mt-1">
+              Matches the category you use when logging entries in Carbon
+              Tracker.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-[var(--color-slate)]">
-                Deadline
+                Emission Cap (kg CO₂)
               </label>
               <input
-                type="date"
-                value={form.deadline}
-                onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                type="number"
+                step="0.1"
+                min="0"
+                value={form.target}
+                onChange={(e) => setForm({ ...form, target: e.target.value })}
                 className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+                required
               />
             </div>
             <div>
               <label className="text-xs font-medium text-[var(--color-slate)]">
-                Reminder Frequency
+                Cap Resets
               </label>
               <select
-                value={form.reminderFrequency}
+                value={form.timeframe}
                 onChange={(e) =>
-                  setForm({ ...form, reminderFrequency: e.target.value })
+                  setForm({ ...form, timeframe: e.target.value })
                 }
                 className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
               >
@@ -156,26 +133,29 @@ export default function GoalModal({
             </div>
           </div>
 
+          <div className="bg-gray-50 p-3 rounded-xl border border-[var(--color-slate)]/20 text-xs text-[var(--color-slate)]">
+            You're aiming to stay{" "}
+            <strong>under {form.target || 0} kg CO₂</strong> from{" "}
+            <strong>{form.category}</strong> entries, every{" "}
+            <strong>{form.timeframe.toLowerCase()}</strong> period — this is a
+            ceiling to avoid, not a target to hit.
+          </div>
+
           <div>
-            <label className="text-xs font-medium text-[var(--color-slate)] block mb-1">
-              Priority
+            <label className="text-xs font-medium text-[var(--color-slate)]">
+              Target End Date
             </label>
-            <div className="flex gap-2">
-              {["Low", "Medium", "High"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setForm({ ...form, priority: p })}
-                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border cursor-pointer ${
-                    form.priority === p
-                      ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
-                      : "border-[var(--color-slate)]/30 text-[var(--color-slate)] hover:bg-gray-50"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <input
+              type="date"
+              value={form.deadline}
+              onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+              className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
+              required
+            />
+            <p className="text-[10px] text-[var(--color-slate)] mt-1">
+              When you'd like this habit to be established by — for reference,
+              doesn't affect the cap math.
+            </p>
           </div>
 
           <div>
@@ -185,8 +165,10 @@ export default function GoalModal({
             <textarea
               rows={2}
               placeholder="Add extra details or guidelines for this goal..."
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               className="w-full mt-1 border border-[var(--color-slate)]/40 rounded-lg p-2 text-sm outline-none"
             />
           </div>
@@ -195,6 +177,7 @@ export default function GoalModal({
             {editGoal ? (
               <button
                 type="button"
+                onClick={() => onDelete && onDelete(editGoal._id)}
                 className="px-3 py-1.5 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50 cursor-pointer"
               >
                 Delete Goal
@@ -212,9 +195,14 @@ export default function GoalModal({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[var(--color-eco)] text-white rounded-lg text-sm font-medium cursor-pointer hover:brightness-95"
+                disabled={saving}
+                className="px-4 py-2 bg-[var(--color-eco)] text-white rounded-lg text-sm font-medium cursor-pointer hover:brightness-95 disabled:opacity-60"
               >
-                {editGoal ? "Save Changes" : "Create Goal"}
+                {saving
+                  ? "Saving..."
+                  : editGoal
+                    ? "Save Changes"
+                    : "Create Goal"}
               </button>
             </div>
           </div>

@@ -1,5 +1,9 @@
+const mongoose = require("mongoose");
+
 const Profile = require("../models/Profile");
 const User = require("../models/User");
+const CarbonEntry = require("../models/CarbonEntry");
+const Goal = require("../models/Goal");
 
 const allowedFields = [
   "fullName",
@@ -32,17 +36,12 @@ function formatProfile(profile, user) {
     phone: profile.phone,
     location: profile.location,
     bio: profile.bio,
-    profilePicture: profile.profilePicture,
-    sustainabilityPreferences: profile.sustainabilityPreferences,
-    environmentalInterests: profile.environmentalInterests,
-    personalGoalPreferences: profile.personalGoalPreferences,
-    lifestyleConfiguration: profile.lifestyleConfiguration,
   };
 }
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id || req.user.id);
+    const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const profile = await findOrCreateProfile(user);
@@ -54,7 +53,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id || req.user.id);
+    const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const updates = {};
@@ -81,11 +80,17 @@ const updateProfile = async (req, res) => {
 
 const deleteAccount = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const idString = req.user._id || req.user.userId;
+    const userId = new mongoose.Types.ObjectId(idString);
+
+    await CarbonEntry.deleteMany({ userId: userId });
+    await Goal.deleteMany({ userId: userId });
     await Profile.deleteOne({ user: userId });
     await User.findByIdAndDelete(userId);
+
     res.json({ message: "Account deleted successfully" });
   } catch (err) {
+    console.error("Delete account error:", err);
     res.status(500).json({ message: "Could not delete account" });
   }
 };
