@@ -13,16 +13,16 @@ const userChallengeSchema = new mongoose.Schema({
     required: true
   },
 
-  progress: {
+  status: {
+    type: String,
+    enum: ["joined", "in_progress", "completed", "failed"],
+    default: "joined"
+  },
+
+  currentProgress: {
     type: Number,
     default: 0,
     min: 0
-  },
-
-  status: {
-    type: String,
-    enum: ["joined", "in-progress", "completed"],
-    default: "joined"
   },
 
   joinedAt: {
@@ -39,15 +39,14 @@ const userChallengeSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Prevent duplicate challenge joining
 userChallengeSchema.index(
   { userId: 1, challengeId: 1 },
   { unique: true }
 );
 
-userChallengeSchema.index({
-  challengeId: 1,
-  status: 1
-});
+// Find challenges by user and status
+userChallengeSchema.index({ userId: 1, status: 1 });
 
 module.exports = mongoose.model(
   "UserChallenge",
