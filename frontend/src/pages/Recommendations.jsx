@@ -25,9 +25,11 @@ function Recommendations() {
     <main className="flex-1 bg-slate-50 px-6 pb-8">
       <div className="w-full">
         <AIInsightsWidget
-          category="Transportation"
-          message="The suggestions below focus on that category first."
-        />
+  		category="Transportation"
+  		message="The suggestions below focus on that category first."
+ 		 used={8.6}
+  		cap={10}
+	/>
 
         <section className="mt-4">
           <div className="grid grid-cols-3 gap-4">
