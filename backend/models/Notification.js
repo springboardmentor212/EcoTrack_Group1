@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
+
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -13,7 +14,6 @@ const notificationSchema = new mongoose.Schema({
       "goal",
       "challenge",
       "ai",
-      "report",
       "system"
     ],
     required: true
@@ -42,12 +42,19 @@ const notificationSchema = new mongoose.Schema({
   }
 
 }, {
-  timestamps: true
+  timestamps: {
+    createdAt: false,
+    updatedAt: true
+  }
 });
 
 notificationSchema.index({
   userId: 1,
-  isRead: 1,
+  isRead: 1
+});
+
+notificationSchema.index({
+  userId: 1,
   createdAt: -1
 });
 

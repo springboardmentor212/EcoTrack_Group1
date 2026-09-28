@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const recommendationSchema = new mongoose.Schema({
+
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -31,7 +32,7 @@ const recommendationSchema = new mongoose.Schema({
     required: true
   },
 
-  relatedGoal: {
+  relatedGoalId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Goal",
     default: null
@@ -49,7 +50,10 @@ const recommendationSchema = new mongoose.Schema({
   }
 
 }, {
-  timestamps: true
+  timestamps: {
+    createdAt: false,
+    updatedAt: true
+  }
 });
 
 recommendationSchema.index({

@@ -35,7 +35,6 @@ const badgeSchema = new mongoose.Schema({
   criteriaKey: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   }
 

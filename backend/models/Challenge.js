@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
 
 const challengeSchema = new mongoose.Schema({
+
   title: {
     type: String,
-    required: true,
+    required: [true, "Challenge title is required"],
     maxlength: 100,
     trim: true
   },
 
   description: {
     type: String,
-    required: true,
+    required: [true, "Challenge description is required"],
     trim: true
   },
 
@@ -30,7 +31,7 @@ const challengeSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function (value) {
-        return value > this.startDate;
+        return !this.startDate || value > this.startDate;
       },
       message: "End date must be after start date"
     }
@@ -38,7 +39,7 @@ const challengeSchema = new mongoose.Schema({
 
   targetMetric: {
     type: Number,
-    required: true,
+    required: [true, "Target metric (category emission cap in kg CO2e) is required"],
     min: 0
   },
 
@@ -64,7 +65,6 @@ const challengeSchema = new mongoose.Schema({
 });
 
 challengeSchema.index({ category: 1, status: 1 });
-
 challengeSchema.index({ startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model(
