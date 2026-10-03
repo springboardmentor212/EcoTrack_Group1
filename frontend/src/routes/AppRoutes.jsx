@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
@@ -16,10 +17,14 @@ import Reports from "../pages/Reports";
 import Recommendations from "../pages/Recommendations";
 import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
+import ChallengeDetail from "../pages/ChallengeDetail";
+import Leaderboard from "../pages/Leaderboard";
 
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -37,6 +42,8 @@ function AppRoutes() {
         <Route path="/goals" element={<Goals />} />
         <Route path="/goals/:id" element={<GoalDetail />} />
         <Route path="/challenges" element={<Challenges />} />
+        <Route path="/challenge-detail" element={<ChallengeDetail />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/recommendations" element={<Recommendations />} />
