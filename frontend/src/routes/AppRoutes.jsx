@@ -15,112 +15,44 @@ import UserProfile from "../pages/UserProfile";
 import EditProfile from "../pages/EditProfile";
 import Reports from "../pages/Reports";
 import Recommendations from "../pages/Recommendations";
+import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ChallengeDetail from "../pages/ChallengeDetail";
 import Leaderboard from "../pages/Leaderboard";
 
 function AppRoutes() {
-    return (
-        <Routes>
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Default route */}
-            <Route
-                path="/"
-                element={<Navigate to="/login" replace />}
-            />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Authentication routes */}
-            <Route
-                path="/login"
-                element={<Login />}
-            />
-
-            <Route
-                path="/register"
-                element={<Register />}
-            />
-
-            <Route
-                path="/forgot-password"
-                element={<ForgotPassword />}
-            />
-
-            {/* Protected user routes */}
-            <Route
-                element={
-                    <ProtectedRoute>
-                        <UserDashboardLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route
-                    path="/user-dashboard"
-                    element={<UserDashboard />}
-                />
-
-                <Route
-                    path="/carbon-tracker"
-                    element={<CarbonTracker />}
-                />
-
-                <Route
-                    path="/carbon-tracker/:id"
-                    element={<EntryDetail />}
-                />
-
-                <Route
-                    path="/goals"
-                    element={<Goals />}
-                />
-
-                <Route
-                    path="/goals/:id"
-                    element={<GoalDetail />}
-                />
-
-                <Route
-                    path="/challenges"
-                    element={<Challenges />}
-                />
-
-                <Route
-                    path="/challenge-detail"
-                    element={<ChallengeDetail />}
-                />
-
-                <Route
-                    path="/leaderboard"
-                    element={<Leaderboard />}
-                />
-
-                <Route
-                    path="/search"
-                    element={<SearchResults />}
-                />
-
-                <Route
-                    path="/reports"
-                    element={<Reports />}
-                />
-
-                <Route
-                    path="/recommendations"
-                    element={<Recommendations />}
-                />
-
-                <Route
-                    path="/profile"
-                    element={<UserProfile />}
-                />
-
-                <Route
-                    path="/profile/edit"
-                    element={<EditProfile />}
-                />
-            </Route>
-
-        </Routes>
-    );
+      <Route
+        element={
+          <ProtectedRoute>
+            <UserDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/user-dashboard" element={<UserDashboard />} />
+        <Route path="/carbon-tracker" element={<CarbonTracker />} />
+        <Route path="/carbon-tracker/:id" element={<EntryDetail />} />
+        <Route path="/goals" element={<Goals />} />
+        <Route path="/goals/:id" element={<GoalDetail />} />
+        <Route path="/challenges" element={<Challenges />} />
+        <Route path="/challenge-detail" element={<ChallengeDetail />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/recommendations" element={<Recommendations />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
+      </Route>
+    </Routes>
+  );
 }
 
 export default AppRoutes;

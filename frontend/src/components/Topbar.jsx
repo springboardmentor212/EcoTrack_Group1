@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, Bell, LogOut } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useCurrentUser from "../hooks/useCurrentUser";
+import NotificationBell from "./NotificationBell";
 
 export default function Topbar({ ecoScore, children }) {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ export default function Topbar({ ecoScore, children }) {
         </span>
       </div>
       <div className="flex items-center gap-7">
-        <Bell size={20} className="text-[var(--color-slate)]" />
+        <NotificationBell />
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-900 cursor-pointer"
