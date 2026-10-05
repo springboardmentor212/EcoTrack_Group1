@@ -5,13 +5,13 @@ const ChallengeCard = ({
     description,
     duration,
     participants,
-    onEdit
+    onEdit,
+    isAdmin
 }) => {
     const navigate = useNavigate();
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-
             <h2 className="text-lg font-semibold text-[var(--color-slate)]">
                 {title}
             </h2>
@@ -31,21 +31,23 @@ const ChallengeCard = ({
             </div>
 
             <div className="mt-4 flex gap-2">
-
-                <button
-                    onClick={onEdit}
-                    className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
-                >
-                    Edit
-                </button>
+                {isAdmin && (
+                    <button
+                        onClick={onEdit}
+                        className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
+                    >
+                        Edit
+                    </button>
+                )}
 
                 <button
                     onClick={() => navigate("/challenge-detail")}
-                    className="flex-1 rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white"
+                    className={`rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white ${
+                        isAdmin ? "flex-1" : "w-full"
+                    }`}
                 >
-                    View Challenge
+                    Join
                 </button>
-
             </div>
         </div>
     );

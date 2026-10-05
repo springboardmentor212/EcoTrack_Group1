@@ -27,6 +27,7 @@ const Leaderboard = () => {
     return (
         <div className="p-6">
 
+            {/* Page Header */}
             <div>
                 <h1 className="text-2xl font-bold text-[var(--color-slate)]">
                     Leaderboard
@@ -64,9 +65,20 @@ const Leaderboard = () => {
 
             </div>
 
-            <LeaderboardTable users={users} />
+            {/* Badges + Leaderboard */}
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-            <BadgeGrid />
+                {/* Badges - Left */}
+                <div>
+                    <BadgeGrid />
+                </div>
+
+                {/* Leaderboard - Right */}
+                <div className="lg:col-span-2">
+                    <LeaderboardTable users={users} />
+                </div>
+
+            </div>
 
         </div>
     );
