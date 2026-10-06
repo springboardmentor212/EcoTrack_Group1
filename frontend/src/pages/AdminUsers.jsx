@@ -1,4 +1,5 @@
 import StatCard from "../components/StatCard";
+import UserManagementTable from "../components/UserManagementTable";
 
 export default function AdminUsers() {
   const stats = [
@@ -26,13 +27,23 @@ export default function AdminUsers() {
     },
   ];
 
+  const users = [
+    {
+      id: 1,
+      name: "Demo User",
+      email: "demo@example.com",
+      role: "user",
+      status: "active",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">
           Users
         </h1>
-        <p className="text-sm text-[var(--color-slate)] mt-1">
+        <p className="mt-1 text-sm text-[var(--color-slate)]">
           Manage user accounts, roles, and access.
         </p>
       </div>
@@ -43,13 +54,17 @@ export default function AdminUsers() {
         ))}
       </div>
 
-      <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[var(--color-primary)]">
-          All Users
-        </h2>
-        <p className="text-sm text-[var(--color-slate)] mt-1">
-          View and manage registered users.
-        </p>
+      <div>
+        <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-[var(--color-primary)]">
+            All Users
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-slate)]">
+            View and manage registered users.
+          </p>
+        </div>
+
+        <UserManagementTable users={users} />
       </div>
     </div>
   );
