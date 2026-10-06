@@ -7,32 +7,63 @@ const ChallengeLeaderboard = () => {
     ];
 
     return (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-[var(--color-slate)]">
-                Challenge Leaderboard
-            </h2>
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-[var(--color-slate)]">
+                    Leaderboard
+                </h2>
 
-            <div className="mt-4 space-y-3">
-                {leaderboard.map((user, index) => (
-                    <div
-                        key={index}
-                        className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3"
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="font-semibold text-[var(--color-eco)]">
-                                #{index + 1}
-                            </span>
+                <span className="text-sm text-[var(--color-muted)]">
+                    Top Participants
+                </span>
+            </div>
 
-                            <span className="font-medium text-[var(--color-slate)]">
-                                {user.name}
-                            </span>
+            <div className="mt-5 overflow-hidden rounded-lg border border-gray-200">
+                <div className="grid grid-cols-12 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase text-[var(--color-muted)]">
+                    <span className="col-span-2">Rank</span>
+                    <span className="col-span-7">Participant</span>
+                    <span className="col-span-3 text-right">Score</span>
+                </div>
+
+                <div>
+                    {leaderboard.map((user, index) => (
+                        <div
+                            key={index}
+                            className={`grid grid-cols-12 items-center px-4 py-4 ${
+                                index !== leaderboard.length - 1
+                                    ? "border-b border-gray-200"
+                                    : ""
+                            }`}
+                        >
+                            <div className="col-span-2">
+                                <span
+                                    className={`font-semibold ${
+                                        index === 0
+                                            ? "text-[var(--color-eco)]"
+                                            : "text-[var(--color-muted)]"
+                                    }`}
+                                >
+                                    {index + 1}
+                                </span>
+                            </div>
+
+                            <div className="col-span-7">
+                                <span className="font-medium text-[var(--color-slate)]">
+                                    {user.name}
+                                </span>
+                            </div>
+
+                            <div className="col-span-3 text-right">
+                                <span className="font-semibold text-[var(--color-slate)]">
+                                    {user.score}
+                                </span>
+                                <span className="ml-1 text-xs text-[var(--color-muted)]">
+                                    points
+                                </span>
+                            </div>
                         </div>
-
-                        <span className="text-sm font-semibold text-[var(--color-muted)]">
-                            {user.score} points
-                        </span>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
