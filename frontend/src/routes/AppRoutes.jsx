@@ -19,7 +19,7 @@ import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ChallengeDetail from "../pages/ChallengeDetail";
 import Leaderboard from "../pages/Leaderboard";
-
+import AdminUsers from "../pages/AdminUsers";
 function AppRoutes() {
   return (
     <Routes>
@@ -50,6 +50,7 @@ function AppRoutes() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
       </Route>
     </Routes>
   );
