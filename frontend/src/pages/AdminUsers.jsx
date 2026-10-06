@@ -1,7 +1,13 @@
+import { useMemo, useState } from "react";
 import StatCard from "../components/StatCard";
+import UserFilters from "../components/UserFilters";
 import UserManagementTable from "../components/UserManagementTable";
 
 export default function AdminUsers() {
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("all");
+  const [status, setStatus] = useState("all");
+
   const stats = [
     {
       label: "Total Users",
@@ -37,6 +43,19 @@ export default function AdminUsers() {
     },
   ];
 
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(search.toLowerCase()) ||
+        user.email.toLowerCase().includes(search.toLowerCase());
+
+      const matchesRole = role === "all" || user.role === role;
+      const matchesStatus = status === "all" || user.status === status;
+
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [search, role, status]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -55,16 +74,26 @@ export default function AdminUsers() {
       </div>
 
       <div>
-        <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-sm">
+        <div className="rounded-2xl bg-[var(--color-surface)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[var(--color-primary)]">
             All Users
           </h2>
+
           <p className="mt-1 text-sm text-[var(--color-slate)]">
             View and manage registered users.
           </p>
-        </div>
 
-        <UserManagementTable users={users} />
+          <UserFilters
+            search={search}
+            role={role}
+            status={status}
+            onSearchChange={setSearch}
+            onRoleChange={setRole}
+            onStatusChange={setStatus}
+          />
+
+          <UserManagementTable users={filteredUsers} />
+        </div>
       </div>
     </div>
   );
