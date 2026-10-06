@@ -1,3 +1,5 @@
+import StatusBadge from "./StatusBadge";
+
 export default function UserManagementTable({
   users = [],
   onView,
@@ -43,15 +45,7 @@ export default function UserManagementTable({
               <option value="admin">Admin</option>
             </select>
 
-            <span
-              className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
-                user.status === "active"
-                  ? "bg-[var(--color-eco)]/10 text-[var(--color-eco)]"
-                  : "bg-red-50 text-red-500"
-              }`}
-            >
-              {user.status === "active" ? "Active" : "Suspended"}
-            </span>
+            <StatusBadge status={user.status} />
 
             <div className="flex items-center gap-2">
               <button
