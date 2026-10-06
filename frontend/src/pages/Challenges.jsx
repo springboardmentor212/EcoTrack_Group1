@@ -141,7 +141,7 @@ const Challenges = () => {
                 onFilterChange={setSelectedFilter}
             />
 
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {filteredChallenges.map((challenge, index) => (
                     <ChallengeCard
                         key={index}

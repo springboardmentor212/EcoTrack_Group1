@@ -27,30 +27,28 @@ const BadgeGrid = () => {
     ];
 
     return (
-        <div className="mt-8">
-            <h2 className="text-xl font-semibold text-[var(--color-slate)]">
+        <div>
+            <h2 className="text-lg font-semibold text-[var(--color-slate)]">
                 Badges
             </h2>
 
-            <div className="mt-4 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-5 grid grid-cols-3 gap-5">
                 {badges.map((badge) => (
                     <div
                         key={badge.name}
-                        className="flex flex-col items-center rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                        className="flex flex-col items-center text-center"
                     >
-                        {/* Badge Image */}
-                        <div className="flex h-24 w-24 items-center justify-center">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-50">
                             <img
                                 src={badge.image}
                                 alt={badge.name}
-                                className="h-20 w-20 object-contain"
+                                className="h-10 w-10 object-contain"
                             />
                         </div>
 
-                        {/* Badge Heading */}
-                        <h3 className="mt-4 text-center font-semibold text-[var(--color-slate)]">
+                        <p className="mt-2 text-xs font-medium text-[var(--color-slate)]">
                             {badge.name}
-                        </h3>
+                        </p>
                     </div>
                 ))}
             </div>

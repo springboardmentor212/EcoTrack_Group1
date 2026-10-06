@@ -23,11 +23,11 @@ const ChallengeCard = ({
                 {title}
             </h2>
 
-            <p className="mt-2 text-sm text-[var(--color-muted)]">
+            <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
                 {description}
             </p>
 
-            <div className="mt-4 flex justify-between text-sm">
+            <div className="mt-5 flex items-center justify-between text-sm">
                 <span className="text-[var(--color-muted)]">
                     Duration: {duration}
                 </span>
@@ -37,7 +37,7 @@ const ChallengeCard = ({
                 </span>
             </div>
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-5 flex gap-3">
                 {isAdmin && (
                     <button
                         onClick={(e) => {
