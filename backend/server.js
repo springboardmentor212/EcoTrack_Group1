@@ -11,6 +11,7 @@ const carbonRoutes = require("./routes/carbonRoutes");
 const goalRoutes = require("./routes/goalRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const searchRoutes = require("./routes/searchRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 
 connectDB();
 
@@ -28,6 +29,7 @@ app.use("/api/carbon", carbonRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 
 app.get("/", (req, res) => {
   res.send("EcoTrack Backend API is running");

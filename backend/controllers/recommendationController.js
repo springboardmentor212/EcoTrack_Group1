@@ -1,31 +1,27 @@
 const OpenAI = require("openai");
-// const Recommendation = require('../models/Recommendation');
-// const Goal = require('../models/Goal');
+const Recommendation = require("../models/Recommendation");
+const Goal = require("../models/Goal");
 const { getAllCategoryEmissionsInRange } = require("../utils/aggregations");
 const {
   evaluateImpact,
   resolveActionSavings,
 } = require("../services/savingsCalculator");
-const { createNotification } = require("../services/notificationService");
+// const { createNotification } = require("../services/notificationService");
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.GROQ_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1",
+    })
+  : null;
 
-const CATEGORIES = ["transportation", "energy", "food", "waste", "water"];
+const USE_DAILY_CACHE = false;
+
 async function getRecommendations(req, res) {
   try {
-    const userId = req.user.id;
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const existing = await Recommendation.find({
-      userId,
-      status: "suggested",
-      createdAt: { $gte: startOfToday },
-    }).sort({ impactScore: -1 });
+    const userId = req.user.userId;
 
-    if (existing.length > 0) {
-      return res.status(200).json({ success: true, data: existing });
-    }
-    const goals = await Goal.find({ userId, status: "active" });
+    const goals = await Goal.find({ userId }).sort({ createdAt: -1 });
     if (goals.length === 0) {
       return res.status(200).json({
         success: true,
@@ -34,69 +30,91 @@ async function getRecommendations(req, res) {
           "No active goals yet — set a category cap to get recommendations.",
       });
     }
+
     const now = new Date();
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const usageByCategory = {};
     for (const goal of goals) {
-      const periodEnd = now < goal.deadline ? now : goal.deadline;
-      usageByCategory[goal.category] = await getAllCategoryEmissionsInRange(
-        userId,
-        goal.createdAt,
-        periodEnd,
-      );
+      const periodEnd = endOfToday < goal.deadline ? endOfToday : goal.deadline;
+      usageByCategory[goal.category.toLowerCase()] =
+        await getAllCategoryEmissionsInRange(userId, monthStart, periodEnd);
     }
 
     const ranked = goals
       .map((goal) => {
-        const usage = usageByCategory[goal.category][goal.category] || 0;
+        const key = goal.category.toLowerCase();
+        const usage = usageByCategory[key]?.[key] || 0;
         const percentUsed = goal.target > 0 ? (usage / goal.target) * 100 : 0;
         return { goal, usage, percentUsed };
       })
       .sort((a, b) => b.percentUsed - a.percentUsed)
-      .slice(0, 1);
-    if (ranked.length === 0) {
-      return res.status(200).json({ success: true, data: [] });
+      .slice(0, 2);
+
+    const top = ranked[0];
+    const topCap = {
+      category: top.goal.category,
+      usage: top.usage,
+      cap: top.goal.target,
+      percentUsed: top.percentUsed,
+    };
+
+    if (USE_DAILY_CACHE) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const existing = await Recommendation.find({
+        userId,
+        status: { $in: ["suggested", "accepted"] },
+        createdAt: { $gte: startOfToday },
+      }).sort({ impactScore: -1 });
+
+      if (existing.length > 0) {
+        return res.status(200).json({ success: true, data: existing, topCap });
+      }
     }
 
-    const { goal, usage, percentUsed } = ranked[0];
-
-    const aiSuggestions = await callOpenAiForSuggestions({
-      category: goal.category,
-      usage,
-      cap: goal.target,
-      percentUsed,
-    });
     const created = [];
-    for (const suggestion of aiSuggestions) {
-      const estimatedSavingsKg = resolveActionSavings(
-        suggestion.actionKey,
-        suggestion.estimatedSavingsKg,
-      );
-      const impact = evaluateImpact(usage, goal.target, estimatedSavingsKg);
-
-      const rec = await Recommendation.create({
-        userId,
-        title: suggestion.title,
-        description: impact.bringsUnderCap
-          ? `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2 — brings ${goal.category} back under cap.`
-          : `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2.`,
-        impactScore: estimatedSavingsKg,
-        category: goal.category,
-        relatedGoalId: goal._id,
-        status: "suggested",
+    for (const { goal, usage, percentUsed } of ranked) {
+      const aiSuggestions = await callAiForSuggestions({
+        category: goal.category.toLowerCase(),
+        usage,
+        cap: goal.target,
+        percentUsed,
       });
-      created.push(rec);
+
+      for (const suggestion of aiSuggestions) {
+        const estimatedSavingsKg = resolveActionSavings(
+          suggestion.actionKey,
+          suggestion.estimatedSavingsKg,
+        );
+        const impact = evaluateImpact(usage, goal.target, estimatedSavingsKg);
+
+        const rec = await Recommendation.create({
+          userId,
+          title: suggestion.title,
+          description: impact.bringsUnderCap
+            ? `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2 — brings ${goal.category} back under cap.`
+            : `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2.`,
+          impactScore: estimatedSavingsKg,
+          category: goal.category.toLowerCase(),
+          relatedGoalId: goal._id,
+          status: "suggested",
+        });
+        created.push(rec);
+      }
     }
 
-    if (created.length > 0) {
-      await createNotification({
-        userId,
-        title: "New recommendations ready",
-        message: `Your ${goal.category} emissions are at ${Math.round(percentUsed)}% of this period's cap — check the new suggestions.`,
-        type: "ai",
-      });
-    }
+    // if (created.length > 0) {
+    //   await createNotification({
+    //     userId,
+    //     title: "New recommendations ready",
+    //     message: `Your ${top.goal.category} emissions are at ${Math.round(top.percentUsed)}% of this period's cap — check the new suggestions.`,
+    //     type: "ai",
+    //   });
+    // }
 
-    return res.status(200).json({ success: true, data: created });
+    return res.status(200).json({ success: true, data: created, topCap });
   } catch (err) {
     console.error("getRecommendations error:", err);
     return res
@@ -108,7 +126,7 @@ async function getRecommendations(req, res) {
 async function acceptRecommendation(req, res) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const rec = await Recommendation.findOneAndUpdate(
       { _id: id, userId },
@@ -134,7 +152,7 @@ async function acceptRecommendation(req, res) {
 async function dismissRecommendation(req, res) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const rec = await Recommendation.findOneAndUpdate(
       { _id: id, userId },
@@ -157,7 +175,7 @@ async function dismissRecommendation(req, res) {
   }
 }
 
-async function callOpenAiForSuggestions({ category, usage, cap, percentUsed }) {
+async function callAiForSuggestions({ category, usage, cap, percentUsed }) {
   const prompt = `You are a sustainability assistant for a carbon-tracking app.
 User's "${category}" emissions: ${usage} kg CO2e used against a cap of ${cap} kg CO2e (${Math.round(percentUsed)}% used).
 Suggest exactly 2 concrete, realistic actions the user could take this week to reduce "${category}" emissions.
@@ -166,7 +184,7 @@ Respond ONLY with valid JSON, no markdown, no commentary, in this exact shape:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "openai/gpt-oss-120b",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.4,
     });
@@ -180,10 +198,7 @@ Respond ONLY with valid JSON, no markdown, no commentary, in this exact shape:
     }
     throw new Error("Empty or non-array AI response");
   } catch (err) {
-    console.error(
-      "OpenAI suggestion call failed, using fallback:",
-      err.message,
-    );
+    console.error("AI suggestion call failed, using fallback:", err.message);
     return [
       {
         actionKey: `${category}_reduce_general`,
