@@ -13,7 +13,6 @@ import Challenges from "../pages/Challenges";
 import SearchResults from "../pages/SearchResults";
 import UserProfile from "../pages/UserProfile";
 import EditProfile from "../pages/EditProfile";
-import Reports from "../pages/Reports";
 import Recommendations from "../pages/Recommendations";
 import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -45,7 +44,6 @@ function AppRoutes() {
         <Route path="/challenge-detail" element={<ChallengeDetail />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/search" element={<SearchResults />} />
-        <Route path="/reports" element={<Reports />} />
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<UserProfile />} />
