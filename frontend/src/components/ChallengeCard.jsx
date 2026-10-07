@@ -5,22 +5,29 @@ const ChallengeCard = ({
     description,
     duration,
     participants,
-    onEdit
+    onEdit,
+    isAdmin
 }) => {
     const navigate = useNavigate();
 
-    return (
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    const handleCardClick = () => {
+        navigate("/challenge-detail");
+    };
 
+    return (
+        <div
+            onClick={handleCardClick}
+            className="cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+        >
             <h2 className="text-lg font-semibold text-[var(--color-slate)]">
                 {title}
             </h2>
 
-            <p className="mt-2 text-sm text-[var(--color-muted)]">
+            <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
                 {description}
             </p>
 
-            <div className="mt-4 flex justify-between text-sm">
+            <div className="mt-5 flex items-center justify-between text-sm">
                 <span className="text-[var(--color-muted)]">
                     Duration: {duration}
                 </span>
@@ -30,22 +37,30 @@ const ChallengeCard = ({
                 </span>
             </div>
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-5 flex gap-3">
+                {isAdmin && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit();
+                        }}
+                        className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
+                    >
+                        Edit
+                    </button>
+                )}
 
                 <button
-                    onClick={onEdit}
-                    className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/challenge-detail");
+                    }}
+                    className={`rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white ${
+                        isAdmin ? "flex-1" : "w-full"
+                    }`}
                 >
-                    Edit
+                    Join
                 </button>
-
-                <button
-                    onClick={() => navigate("/challenge-detail")}
-                    className="flex-1 rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white"
-                >
-                    View Challenge
-                </button>
-
             </div>
         </div>
     );

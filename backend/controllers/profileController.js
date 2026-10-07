@@ -19,18 +19,21 @@ const allowedFields = [
 
 async function findOrCreateProfile(user) {
   let profile = await Profile.findOne({ user: user._id });
+
   if (!profile) {
     profile = await Profile.create({
       user: user._id,
       fullName: user.name || user.fullName || user.email.split("@")[0],
     });
   }
+
   return profile;
 }
 
 function formatProfile(profile, user) {
   return {
     email: user.email,
+    role: user.role,
     memberSince: user.createdAt || profile.createdAt,
     fullName: profile.fullName,
     phone: profile.phone,
@@ -42,9 +45,13 @@ function formatProfile(profile, user) {
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const profile = await findOrCreateProfile(user);
+
     res.json(formatProfile(profile, user));
   } catch (err) {
     res.status(500).json({ message: "Could not load profile" });
@@ -54,27 +61,45 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const updates = {};
+
     allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) updates[field] = req.body[field];
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
     });
 
-    if (updates.fullName !== undefined && !String(updates.fullName).trim()) {
-      return res.status(400).json({ message: "Full name is required" });
+    if (
+      updates.fullName !== undefined &&
+      !String(updates.fullName).trim()
+    ) {
+      return res.status(400).json({
+        message: "Full name is required",
+      });
     }
 
     const profile = await findOrCreateProfile(user);
+
     profile.set(updates);
+
     await profile.save();
 
     res.json(formatProfile(profile, user));
   } catch (err) {
     if (err.name === "ValidationError") {
-      return res.status(400).json({ message: err.message });
+      return res.status(400).json({
+        message: err.message,
+      });
     }
-    res.status(500).json({ message: "Could not update profile" });
+
+    res.status(500).json({
+      message: "Could not update profile",
+    });
   }
 };
 
@@ -88,10 +113,15 @@ const deleteAccount = async (req, res) => {
     await Profile.deleteOne({ user: userId });
     await User.findByIdAndDelete(userId);
 
-    res.json({ message: "Account deleted successfully" });
+    res.json({
+      message: "Account deleted successfully",
+    });
   } catch (err) {
     console.error("Delete account error:", err);
-    res.status(500).json({ message: "Could not delete account" });
+
+    res.status(500).json({
+      message: "Could not delete account",
+    });
   }
 };
 
