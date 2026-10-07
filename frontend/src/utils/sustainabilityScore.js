@@ -20,8 +20,8 @@ export const calculateSustainabilityScore = (
 };
 
 export const getScoreBadge = (score) => {
-  if (score >= 80) return "Champion";
-  if (score >= 60) return "Warrior";
-  if (score >= 40) return "Starter";
+  if (score >= 90) return "Champion";
+  if (score >= 70) return "Advocate";
+  if (score >= 40) return "Warrior";
   return "Beginner";
 };
