@@ -41,7 +41,7 @@ function AppRoutes() {
         <Route path="/goals" element={<Goals />} />
         <Route path="/goals/:id" element={<GoalDetail />} />
         <Route path="/challenges" element={<Challenges />} />
-        <Route path="/challenge-detail" element={<ChallengeDetail />} />
+        <Route path="/challenges/:id" element={<ChallengeDetail />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/recommendations" element={<Recommendations />} />

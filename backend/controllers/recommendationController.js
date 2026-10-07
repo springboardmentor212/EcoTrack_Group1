@@ -15,8 +15,44 @@ const openai = process.env.GROQ_API_KEY
     })
   : null;
 
-const USE_DAILY_CACHE = false;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const inFlight = new Map();
+
+async function generateRecommendations(userId, ranked) {
+  const created = [];
+
+  for (const { goal, usage, percentUsed } of ranked) {
+    const aiSuggestions = await callAiForSuggestions({
+      category: goal.category.toLowerCase(),
+      usage,
+      cap: goal.target,
+      percentUsed,
+    });
+
+    for (const suggestion of aiSuggestions) {
+      const estimatedSavingsKg = resolveActionSavings(
+        suggestion.actionKey,
+        suggestion.estimatedSavingsKg,
+      );
+      const impact = evaluateImpact(usage, goal.target, estimatedSavingsKg);
+
+      const rec = await Recommendation.create({
+        userId,
+        title: suggestion.title,
+        description: impact.bringsUnderCap
+          ? `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2 — brings ${goal.category} back under cap.`
+          : `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2.`,
+        impactScore: estimatedSavingsKg,
+        category: goal.category.toLowerCase(),
+        relatedGoalId: goal._id,
+        status: "suggested",
+      });
+      created.push(rec);
+    }
+  }
+
+  return created;
+}
 
 const capitalize = (str) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
@@ -68,59 +104,31 @@ async function getRecommendations(req, res) {
       percentUsed: top.percentUsed,
     };
 
-    if (USE_DAILY_CACHE) {
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const existing = await Recommendation.find({
-        userId,
-        status: { $in: ["suggested", "accepted"] },
-        createdAt: { $gte: startOfToday },
-      }).sort({ impactScore: -1 });
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
-      if (existing.length > 0) {
-        return res.status(200).json({ success: true, data: existing, topCap });
-      }
-    }
+    const todays = await Recommendation.find({
+      userId,
+      createdAt: { $gte: startOfToday },
+    }).sort({ impactScore: -1 });
 
-    const created = [];
-    for (const { goal, usage, percentUsed } of ranked) {
-      const aiSuggestions = await callAiForSuggestions({
-        category: goal.category.toLowerCase(),
-        usage,
-        cap: goal.target,
-        percentUsed,
+    if (todays.length > 0) {
+      return res.status(200).json({
+        success: true,
+        data: todays.filter((r) => r.status !== "dismissed"),
+        topCap,
       });
-
-      for (const suggestion of aiSuggestions) {
-        const estimatedSavingsKg = resolveActionSavings(
-          suggestion.actionKey,
-          suggestion.estimatedSavingsKg,
-        );
-        const impact = evaluateImpact(usage, goal.target, estimatedSavingsKg);
-
-        const rec = await Recommendation.create({
-          userId,
-          title: suggestion.title,
-          description: impact.bringsUnderCap
-            ? `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2 — brings ${goal.category} back under cap.`
-            : `${suggestion.description} Potential reduction: ${estimatedSavingsKg} kg CO2.`,
-          impactScore: estimatedSavingsKg,
-          category: goal.category.toLowerCase(),
-          relatedGoalId: goal._id,
-          status: "suggested",
-        });
-        created.push(rec);
-      }
     }
 
-    // if (created.length > 0) {
-    //   await createNotification({
-    //     userId,
-    //     title: "New recommendations ready",
-    //     message: `Your ${top.goal.category} emissions are at ${Math.round(top.percentUsed)}% of this period's cap — check the new suggestions.`,
-    //     type: "ai",
-    //   });
-    // }
+    const key = String(userId);
+    let pending = inFlight.get(key);
+    if (!pending) {
+      pending = generateRecommendations(userId, ranked).finally(() =>
+        inFlight.delete(key),
+      );
+      inFlight.set(key, pending);
+    }
+    const created = await pending;
 
     return res.status(200).json({ success: true, data: created, topCap });
   } catch (err) {

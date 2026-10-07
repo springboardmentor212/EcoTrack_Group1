@@ -11,12 +11,20 @@ import { searchCarbonEntries } from "../services/carbonService";
 import EmissionTrendChart from "../components/EmissionTrendChart";
 import LogEntryModal from "../components/LogEntryModal";
 import * as goalService from "../services/goalService";
+import * as challengeService from "../services/challengeService";
 import {
   getGoalPercent,
   getGoalBarWidth,
   getGoalRemaining,
   formatDeadline,
 } from "../utils/goalStatus";
+import {
+  calculateSustainabilityScore,
+  getScoreBadge,
+} from "../utils/sustainabilityScore";
+import { useNavigate } from "react-router-dom";
+import { api } from "../services/ecoApi";
+import { SCORE_REFRESH_EVENT } from "../hooks/useSustainabilityScore";
 
 const staticCategoriesFallback = [
   { color: "#0EA5E9", label: "Transportation (35%)", value: "840 kg" },
@@ -37,27 +45,6 @@ const goals = [
   { label: "Zero Waste Week Challenge", percent: 90, note: "2 days left" },
 ];
 
-const challenges = [
-  { label: "Plastic-Free Week", note: "3 days left • 156 active" },
-  { label: "Cycle to Work", note: "Ongoing • 892 active" },
-  { label: "Tree Plantation Drive", note: "5 days left • 2,100 active" },
-];
-
-const tips = [
-  {
-    text: "Switch to LED bulbs to save 75kg CO₂/year",
-    note: "Potential: -75kg CO₂",
-  },
-  {
-    text: "Try carpooling on your commute - potential 40% reduction",
-    note: "Potential: 120kg CO₂",
-  },
-  {
-    text: "Your water usage peaked Tuesday - consider shorter showers",
-    note: "Potential: 15kg CO₂",
-  },
-];
-
 const leaderboard = [
   { rank: "#1", name: "Trapti", tag: "Super Champion", pts: "98 pts" },
   { rank: "#2", name: "Parnika", tag: "Green Advocate", pts: "94 pts" },
@@ -66,31 +53,38 @@ const leaderboard = [
   { rank: "#25", name: "Harshan", tag: "Active Citizen", pts: "77 pts" },
 ];
 
-const activity = [
-  { text: "Logged bike commute - saved 2.1kg CO₂", time: "2 hours ago" },
-  { text: "Completed Plastic-Free challenge", time: "Yesterday" },
-  { text: "New badge earned: Eco Warrior", time: "2 days ago" },
-  { text: "Goal milestone: 50% water reduction reached", time: "3 days ago" },
-];
-
-const notifications = [
-  {
-    text: "Weekly Report Available - your carbon breakdown is ready",
-    time: "10m ago",
-  },
-  {
-    text: "Goal Progress Reminder - 2kg away from your commute milestone",
-    time: "2h ago",
-  },
-  { text: "New Challenge Live! Join Meatless Monday", time: "1d ago" },
-];
-
 export default function UserDashboard() {
   const [totalCO2, setTotalCO2] = useState(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState([]);
   const [isLogEntryModalOpen, setIsLogEntryModalOpen] = useState(false);
   const [dashboardGoals, setDashboardGoals] = useState([]);
   const [goalsSummary, setGoalsSummary] = useState({ active: 0, total: 0 });
+  const [recentEntries, setRecentEntries] = useState([]);
+  const [scoreGoals, setScoreGoals] = useState([]);
+  const [myChallenges, setMyChallenges] = useState([]);
+
+  const navigate = useNavigate();
+  const [tips, setTips] = useState([]);
+  const [tipsLoading, setTipsLoading] = useState(true);
+
+  const fetchTips = async () => {
+    try {
+      const res = await api.getRecommendations();
+      const list = (res?.data || [])
+        .filter((r) => r.status !== "dismissed")
+        .sort((a, b) => b.impactScore - a.impactScore)
+        .slice(0, 3);
+      setTips(list);
+    } catch (err) {
+      setTips([]);
+    } finally {
+      setTipsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTips();
+  }, []);
 
   const fetchSummary = async () => {
     const to = new Date();
@@ -104,6 +98,7 @@ export default function UserDashboard() {
       });
 
       const entries = res?.data?.carbonEntries || [];
+      setRecentEntries(entries);
 
       if (!entries.length) {
         setTotalCO2(null);
@@ -141,6 +136,7 @@ export default function UserDashboard() {
         }),
       );
     } catch (err) {
+      setRecentEntries([]);
       setTotalCO2(null);
       setCategoryBreakdown([]);
     }
@@ -152,6 +148,9 @@ export default function UserDashboard() {
 
   const handleEntryAdded = () => {
     fetchSummary();
+    fetchGoalsWidget();
+    fetchChallengesWidget();
+    window.dispatchEvent(new Event(SCORE_REFRESH_EVENT));
   };
 
   const fetchGoalsWidget = async () => {
@@ -175,12 +174,15 @@ export default function UserDashboard() {
         });
       setDashboardGoals(active);
 
-      const activeCount = allGoals.filter(
+      const activeGoals = allGoals.filter(
         (g) => g.status !== "completed" && g.status !== "paused",
-      ).length;
-      setGoalsSummary({ active: activeCount, total: allGoals.length });
+      );
+      setGoalsSummary({ active: activeGoals.length, total: allGoals.length });
+
+      setScoreGoals(activeGoals.map((g) => ({ percent: getGoalBarWidth(g) })));
     } catch (err) {
       setDashboardGoals([]);
+      setScoreGoals([]);
       setGoalsSummary({ active: 0, total: 0 });
     }
   };
@@ -188,6 +190,46 @@ export default function UserDashboard() {
   useEffect(() => {
     fetchGoalsWidget();
   }, []);
+
+  const fetchChallengesWidget = async () => {
+    try {
+      const res = await challengeService.getMyChallenges();
+      setMyChallenges(res.data.data || []);
+    } catch (err) {
+      setMyChallenges([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchChallengesWidget();
+  }, []);
+
+  /* ---------- challenges ---------- */
+  const activeChallenges = myChallenges.filter((c) => c.status === "active");
+
+  const challengeRows = activeChallenges.slice(0, 3).map((c) => ({
+    label: c.title,
+    note: `${c.daysLeft} ${c.daysLeft === 1 ? "day" : "days"} left • ${c.participantsCount} active`,
+  }));
+
+  const bestRanked = activeChallenges
+    .filter((c) => c.rank)
+    .sort((a, b) => a.rank - b.rank)[0];
+
+  /* ---------- sustainability score ---------- */
+  const hasScoreData = recentEntries.length > 0;
+  const sustainabilityScore = calculateSustainabilityScore(
+    recentEntries,
+    scoreGoals,
+  );
+  const scoreValue = (
+    <>
+      {hasScoreData ? sustainabilityScore : "—"}
+      <span className="ml-1 text-base font-normal text-[var(--color-primary)]">
+        / 100
+      </span>
+    </>
+  );
 
   const statCards = [
     {
@@ -203,9 +245,11 @@ export default function UserDashboard() {
     },
     {
       label: "Sustainability Score",
-      value: "78 / 100",
-      badge: "Eco Warrior",
-      trend: "↑ 4% vs last month",
+      value: scoreValue,
+      badge: hasScoreData ? getScoreBadge(sustainabilityScore) : undefined,
+      trend: hasScoreData
+        ? "Based on the last 30 days"
+        : "Log an entry to get your score",
       trendGood: true,
     },
     {
@@ -219,8 +263,12 @@ export default function UserDashboard() {
     },
     {
       label: "Challenge Rank",
-      value: "#24 / 1,250",
-      trend: "↑ 8 places vs last month",
+      value: bestRanked
+        ? `#${bestRanked.rank} / ${bestRanked.participantsCount}`
+        : "—",
+      trend: bestRanked
+        ? `in ${bestRanked.title}`
+        : "Join a challenge to get ranked",
       trendGood: true,
     },
   ];
@@ -297,19 +345,53 @@ export default function UserDashboard() {
           <h3 className="font-semibold text-[var(--color-primary)] mb-4">
             Active Challenges
           </h3>
-          {challenges.map((c, i) => (
-            <ChallengeRow key={i} {...c} />
-          ))}
+          {challengeRows.length ? (
+            challengeRows.map((c, i) => <ChallengeRow key={i} {...c} />)
+          ) : (
+            <p className="text-xs text-[var(--color-slate)]">
+              You haven't joined any active challenges yet.
+            </p>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
-          <h3 className="font-semibold text-[var(--color-primary)] mb-4 flex items-center gap-2">
-            <Sparkles size={16} /> AI Personalized Eco Tips
-          </h3>
-          {tips.map((tip, i) => (
-            <TipRow key={i} {...tip} />
-          ))}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-[var(--color-primary)] flex items-center gap-2">
+              <Sparkles size={16} /> AI Personalized Eco Tips
+            </h3>
+            <button
+              onClick={() => navigate("/recommendations")}
+              className="text-xs font-semibold text-[var(--color-eco)] hover:underline"
+            >
+              View all
+            </button>
+          </div>
+
+          {tipsLoading ? (
+            <p className="text-xs text-[var(--color-slate)]">Loading tips…</p>
+          ) : tips.length ? (
+            tips.map((tip) => (
+              <div
+                key={tip._id}
+                onClick={() => navigate("/recommendations")}
+                className="mb-3 cursor-pointer rounded-lg border border-[var(--color-eco)] bg-[var(--color-eco)]/10 px-3 py-2 transition hover:shadow-sm"
+              >
+                <p className="text-sm text-[var(--color-primary)]">
+                  {tip.title}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--color-slate)]">
+                  {tip.category.charAt(0).toUpperCase() + tip.category.slice(1)}{" "}
+                  • Potential: -{tip.impactScore} kg CO₂
+                  {tip.status === "accepted" && " • Accepted"}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-[var(--color-slate)]">
+              Set a goal to get personalised tips.
+            </p>
+          )}
         </div>
 
         <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
@@ -321,7 +403,7 @@ export default function UserDashboard() {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-2 gap-4">
         <div className="bg-[var(--color-surface)] rounded-2xl p-5 shadow-sm">
           <h3 className="font-semibold text-[var(--color-primary)] mb-4">
             Recent Activity Feed
@@ -339,7 +421,7 @@ export default function UserDashboard() {
             <ActivityRow key={i} {...n} />
           ))}
         </div>
-      </div>
+      </div> */}
       <LogEntryModal
         isOpen={isLogEntryModalOpen}
         onClose={() => setIsLogEntryModalOpen(false)}
