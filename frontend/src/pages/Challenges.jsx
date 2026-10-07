@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ChallengeCard from "../components/ChallengeCard";
-import ChallengeFilter from "../components/ChallengeFilter";
 import ChallengeFormModal from "../components/ChallengeFormModal";
 import useCurrentUser from "../hooks/useCurrentUser";
 import * as challengeService from "../services/challengeService";
 import { getDurationLabel } from "../utils/challengeUtils";
+
+const tabs = ["All", "Active", "Upcoming", "Completed"];
 
 const Challenges = () => {
   const navigate = useNavigate();
@@ -92,14 +93,14 @@ const Challenges = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-slate)]">
+          <h1 className="text-2xl font-bold text-[var(--color-primary)]">
             Challenges
           </h1>
 
-          <p className="mt-2 text-[var(--color-muted)]">
+          <p className="text-sm text-[var(--color-slate)] mt-1">
             Join challenges and track your sustainability progress.
           </p>
         </div>
@@ -110,17 +111,29 @@ const Challenges = () => {
               setEditingChallenge(null);
               setIsModalOpen(true);
             }}
-            className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white"
+            className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white cursor-pointer transition-all duration-300 transform hover:shadow-md hover:brightness-95 active:scale-[0.90] antialiased"
           >
             + Create Challenge
           </button>
         )}
       </div>
 
-      <ChallengeFilter
-        selectedFilter={selectedFilter}
-        onFilterChange={setSelectedFilter}
-      />
+      {/* Tabs styled identically to Goals */}
+      <div className="flex gap-2 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setSelectedFilter(tab)}
+            className={`text-sm px-4 py-1.5 rounded-full cursor-pointer ${
+              selectedFilter === tab
+                ? "bg-[var(--color-primary)] text-white"
+                : "bg-[var(--color-surface)] text-[var(--color-slate)]"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 

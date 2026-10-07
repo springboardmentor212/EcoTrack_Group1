@@ -1,6 +1,7 @@
 const { getOrCreateProfile } = require("../services/gamificationService");
 const { getScoreboard } = require("../services/scoreService");
 const { syncBadges } = require("../services/badgeService");
+const { notifyRankChanges } = require("../services/rankNotificationService");
 
 async function getLeaderboard(req, res) {
   try {
@@ -8,6 +9,9 @@ async function getLeaderboard(req, res) {
     const userId = String(req.user.userId);
 
     const board = await getScoreboard();
+    notifyRankChanges(board).catch((e) =>
+      console.error("notifyRankChanges failed:", e.message),
+    );
 
     const data = board
       .slice(0, limit)

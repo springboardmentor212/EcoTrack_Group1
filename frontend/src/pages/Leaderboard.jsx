@@ -113,13 +113,13 @@ const Leaderboard = () => {
     }`;
 
   return (
-    <div className="p-6">
+    <div>
       <div>
-        <h1 className="text-2xl font-bold text-[var(--color-slate)]">
+        <h1 className="text-2xl font-bold text-[var(--color-primary)]">
           Leaderboard
         </h1>
 
-        <p className="mt-2 text-[var(--color-muted)]">
+        <p className="text-sm text-[var(--color-slate)] mt-1">
           Global rankings, challenge rankings and badges
         </p>
       </div>

@@ -1,6 +1,7 @@
 const Badge = require("../models/Badge");
 const { getOrCreateProfile, levelForScore } = require("./gamificationService");
 const { getUserBadgeStats } = require("./scoreService");
+const { createNotification } = require("./notificationService");
 
 const POINTS_PER_BADGE = 10;
 
@@ -46,13 +47,39 @@ async function syncBadges(userId) {
       profile.rewardPoints += POINTS_PER_BADGE;
       earned.set(id, earnedAt);
       changed = true;
+      try {
+        await createNotification({
+          userId,
+          title: "New Badge Unlocked! 🏆",
+          message: `Congratulations! You earned the "${badge.name}" badge.`,
+          type: "gamification",
+        });
+      } catch (e) {
+        console.error("badge notification failed:", e.message);
+      }
     }
   }
 
   if (stats.ecoScore !== null && profile.ecoScore !== stats.ecoScore) {
+    const oldLevel = profile.level;
+    const newLevel = levelForScore(stats.ecoScore);
+
     profile.ecoScore = stats.ecoScore;
-    profile.level = levelForScore(stats.ecoScore);
+    profile.level = newLevel;
     changed = true;
+
+    if (oldLevel && oldLevel !== newLevel) {
+      try {
+        await createNotification({
+          userId,
+          title: "Eco Level Up! 🌟",
+          message: `Great work! You reached the "${newLevel}" level.`,
+          type: "gamification",
+        });
+      } catch (e) {
+        console.error("level notification failed:", e.message);
+      }
+    }
   }
 
   if (changed) await profile.save();

@@ -80,7 +80,7 @@ const ChallengeDetail = () => {
   const ended = challenge.status === "completed";
 
   return (
-    <div className="p-6">
+    <div>
       <Link to="/challenges" className="text-sm text-[var(--color-eco)]">
         ← Back to challenges
       </Link>
@@ -88,11 +88,11 @@ const ChallengeDetail = () => {
       <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-slate)]">
+            <h1 className="text-2xl font-bold text-[var(--color-primary)]">
               {challenge.title}
             </h1>
 
-            <p className="mt-2 text-[var(--color-muted)]">
+            <p className="text-sm text-[var(--color-slate)] mt-1">
               {challenge.description}
             </p>
           </div>

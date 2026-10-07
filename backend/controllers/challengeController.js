@@ -3,7 +3,10 @@ const Challenge = require("../models/Challenge");
 const UserChallenge = require("../models/UserChallenge");
 const User = require("../models/User");
 const { getAllCategoryEmissionsInRange } = require("../utils/aggregations");
-// const { createNotification } = require("../services/notificationService");
+const {
+  createNotification,
+  notifyMany,
+} = require("../services/notificationService");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -65,8 +68,9 @@ async function buildLeaderboard(challenge) {
         const status = getMembershipStatus(challenge, total, now);
 
         if (m.currentProgress !== total || m.status !== status) {
-          // const justCompleted =
-          //   status === "completed" && m.status !== "completed";
+          const justCompleted =
+            status === "completed" && m.status !== "completed";
+          const justFailed = status === "failed" && m.status !== "failed";
           m.currentProgress = total;
           m.status = status;
           if (status === "completed" || status === "failed") {
@@ -74,18 +78,23 @@ async function buildLeaderboard(challenge) {
           }
           await m.save();
 
-          // if (justCompleted) {
-          //   try {
-          //     await createNotification({
-          //       userId: m.userId._id,
-          //       title: "Challenge completed",
-          //       message: `You stayed under the cap in "${challenge.title}". Great work!`,
-          //       type: "challenge",
-          //     });
-          //   } catch (e) {
-          //     console.error("challenge notification failed:", e.message);
-          //   }
-          // }
+          if (justCompleted || justFailed) {
+            try {
+              await createNotification({
+                userId: m.userId._id,
+                type: "challenge",
+                title: justCompleted
+                  ? "Challenge completed 🎉"
+                  : "Challenge ended",
+                message: justCompleted
+                  ? `You stayed under the cap in "${challenge.title}". Great work!`
+                  : `"${challenge.title}" has ended and you went over the target. Try the next one!`,
+                dedupKey: `challenge-${status}:${challenge._id}:${m.userId._id}`,
+              });
+            } catch (e) {
+              console.error("challenge notification failed:", e.message);
+            }
+          }
         }
 
         return {
@@ -108,8 +117,6 @@ function sendError(res, err, fallback) {
   console.error(fallback, err);
   return res.status(500).json({ success: false, message: fallback });
 }
-
-/* ---------- controllers ---------- */
 
 async function createChallenge(req, res) {
   try {
@@ -144,6 +151,23 @@ async function createChallenge(req, res) {
       createdBy: req.user.userId,
       participants: [],
     });
+
+    try {
+      const users = await User.find({ _id: { $ne: req.user.userId } }).select(
+        "_id",
+      );
+      await notifyMany(
+        users.map((u) => u._id),
+        {
+          type: "challenge",
+          title: "New challenge available 🌱",
+          message: `"${challenge.title}" is open. Join and keep your ${challenge.category} emissions low.`,
+          dedupKey: `challenge-new:${challenge._id}`,
+        },
+      );
+    } catch (e) {
+      console.error("new challenge notification failed:", e.message);
+    }
 
     return res.status(201).json({ success: true, data: challenge });
   } catch (err) {
@@ -182,6 +206,15 @@ async function updateChallenge(req, res) {
     }
 
     await challenge.save();
+    try {
+      await notifyMany(challenge.participants, {
+        type: "challenge",
+        title: "Challenge updated",
+        message: `"${challenge.title}" was updated by an admin. Check the new details.`,
+      });
+    } catch (e) {
+      console.error("challenge update notification failed:", e.message);
+    }
     return res.status(200).json({ success: true, data: challenge });
   } catch (err) {
     return sendError(res, err, "Failed to update challenge");
@@ -237,6 +270,19 @@ async function getMyChallenges(req, res) {
         .map(async (m) => {
           const c = m.challengeId;
           const status = getStatus(c, now);
+
+          const daysLeftNow = Math.ceil((c.endDate - now) / DAY_MS);
+          if (status === "active" && daysLeftNow <= 1) {
+            createNotification({
+              userId,
+              type: "challenge",
+              title: "Challenge ending soon ⏳",
+              message: `"${c.title}" ends in ${Math.max(0, daysLeftNow)} day. Keep your ${c.category} usage low!`,
+              dedupKey: `challenge-ending:${c._id}`,
+            }).catch((e) =>
+              console.error("ending notification failed:", e.message),
+            );
+          }
 
           let rank = null;
           let currentProgress = m.currentProgress;
@@ -363,12 +409,12 @@ async function joinChallenge(req, res) {
       $addToSet: { participants: userId },
     });
 
-    // await createNotification({
-    //   userId,
-    //   title: "Challenge joined",
-    //   message: `You joined "${challenge.title}". Log your ${challenge.category} activity to track progress.`,
-    //   type: "challenge",
-    // });
+    await createNotification({
+      userId,
+      title: "Challenge joined",
+      message: `You joined "${challenge.title}". Log your ${challenge.category} activity to track progress.`,
+      type: "challenge",
+    });
 
     return res.status(201).json({ success: true, data: membership });
   } catch (err) {
