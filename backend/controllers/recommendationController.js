@@ -16,12 +16,20 @@ const openai = process.env.GROQ_API_KEY
   : null;
 
 const USE_DAILY_CACHE = false;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const capitalize = (str) =>
+  str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
 async function getRecommendations(req, res) {
   try {
     const userId = req.user.userId;
 
-    const goals = await Goal.find({ userId }).sort({ createdAt: -1 });
+    const goals = await Goal.find({
+      userId,
+      source: { $ne: "recommendation" },
+    }).sort({ createdAt: -1 });
+
     if (goals.length === 0) {
       return res.status(200).json({
         success: true,
@@ -129,18 +137,50 @@ async function acceptRecommendation(req, res) {
     const userId = req.user.userId;
 
     const rec = await Recommendation.findOneAndUpdate(
-      { _id: id, userId },
+      { _id: id, userId, status: "suggested" },
       { status: "accepted" },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!rec) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Recommendation not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Recommendation not found or already handled",
+      });
     }
 
-    return res.status(200).json({ success: true, data: rec });
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * DAY_MS);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [last30, thisMonth] = await Promise.all([
+      getAllCategoryEmissionsInRange(userId, thirtyDaysAgo, now),
+      getAllCategoryEmissionsInRange(userId, monthStart, now),
+    ]);
+
+    const baseline = last30?.[rec.category] || 0;
+    const monthUsed = thisMonth?.[rec.category] || 0;
+
+    const reduction = Math.min(rec.impactScore, baseline * 0.3);
+
+    let target = baseline - reduction;
+    target = Math.max(target, monthUsed * 1.1, 5);
+    target = Math.round(target * 100) / 100;
+
+    const goal = await Goal.create({
+      userId,
+      title: rec.title,
+      description: rec.description,
+      category: capitalize(rec.category),
+      target,
+      timeframe: "Monthly",
+      unit: "kg CO2",
+      deadline: new Date(now.getTime() + 30 * DAY_MS),
+      source: "recommendation",
+      recommendationId: rec._id,
+    });
+
+    return res.status(200).json({ success: true, data: rec, goal });
   } catch (err) {
     console.error("acceptRecommendation error:", err);
     return res
@@ -157,7 +197,7 @@ async function dismissRecommendation(req, res) {
     const rec = await Recommendation.findOneAndUpdate(
       { _id: id, userId },
       { status: "dismissed" },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!rec) {
@@ -178,7 +218,7 @@ async function dismissRecommendation(req, res) {
 async function callAiForSuggestions({ category, usage, cap, percentUsed }) {
   const prompt = `You are a sustainability assistant for a carbon-tracking app.
 User's "${category}" emissions: ${usage} kg CO2e used against a cap of ${cap} kg CO2e (${Math.round(percentUsed)}% used).
-Suggest exactly 2 concrete, realistic actions the user could take this week to reduce "${category}" emissions.
+Suggest exactly 2 concrete, realistic actions the user could take this month to reduce "${category}" emissions. Estimated savings must be realistic for one month and not more than 30% of the current usage.
 Respond ONLY with valid JSON, no markdown, no commentary, in this exact shape:
 [{"actionKey":"snake_case_key","title":"short title","description":"one sentence","estimatedSavingsKg":number}]`;
 

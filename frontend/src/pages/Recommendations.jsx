@@ -35,7 +35,7 @@ function Recommendations() {
       setRecs((prev) =>
         prev.map((r) => (r._id === id ? { ...r, status: "accepted" } : r)),
       );
-      toast.success("Recommendation accepted!");
+      toast.success("Accepted! A 30-day goal was added to your Goals tab.");
     } catch (err) {
       toast.error(err.message);
     }
