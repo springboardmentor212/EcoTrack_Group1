@@ -24,7 +24,6 @@ const notificationSchema = new mongoose.Schema(
     message: { type: String, required: true, trim: true },
     isRead: { type: Boolean, default: false },
     readAt: { type: Date, default: null },
-    // Used to avoid sending the same alert twice (e.g. "cap exceeded this week")
     dedupKey: { type: String, default: null },
   },
   { timestamps: true },

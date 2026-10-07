@@ -1,7 +1,7 @@
 const RankSnapshot = require("../models/RankSnapshot");
 const { createNotification } = require("./notificationService");
 
-const BIG_MOVE = 3; // notify when rank changes by 3+ places
+const BIG_MOVE = 3; 
 
 /**
  * Compares the fresh scoreboard with the last saved ranks and notifies users

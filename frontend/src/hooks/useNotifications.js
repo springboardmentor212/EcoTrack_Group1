@@ -6,7 +6,7 @@ const POLL_MS = 15000;
 
 export default function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
-  const seen = useRef(null); // ids already known; null until first load
+  const seen = useRef(null); 
 
   const refresh = useCallback(async () => {
     try {
@@ -14,7 +14,6 @@ export default function useNotifications() {
       const list = res.data.data || [];
       setUnreadCount(res.data.unreadCount || 0);
 
-      // First load: remember what exists, don't toast old notifications
       if (seen.current === null) {
         seen.current = new Set(list.map((n) => n._id));
         return;
@@ -22,7 +21,7 @@ export default function useNotifications() {
 
       list
         .filter((n) => !n.isRead && !seen.current.has(n._id))
-        .reverse() // oldest first
+        .reverse() 
         .forEach((n) => toast(n.title, { description: n.message }));
 
       list.forEach((n) => seen.current.add(n._id));

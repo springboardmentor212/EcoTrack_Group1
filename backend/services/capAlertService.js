@@ -2,7 +2,7 @@ const Goal = require("../models/Goal");
 const { getAllCategoryEmissionsInRange } = require("../utils/aggregations");
 const { createNotification } = require("./notificationService");
 
-const WARN_AT = 0.8; // 80% of the cap
+const WARN_AT = 0.8; 
 
 const getPeriodStart = (timeframe) => {
   const now = new Date();

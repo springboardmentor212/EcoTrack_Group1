@@ -10,7 +10,6 @@ function NotificationList() {
     try {
       setLoading(true);
       const res = await api.getNotifications();
-      // Your backend returns { success: true, data: [...], unreadCount: N }
       setNotifications(res.data || []);
       setUnreadCount(res.unreadCount || 0);
     } catch (err) {
@@ -23,7 +22,6 @@ function NotificationList() {
   const handleMarkRead = async (id) => {
     try {
       await api.markNotificationRead(id);
-      // Refresh notifications list to update UI state
       fetchNotifications();
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
