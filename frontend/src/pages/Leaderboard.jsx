@@ -166,7 +166,7 @@ const Leaderboard = () => {
               <select
                 value={selectedId}
                 onChange={(e) => setSelectedId(e.target.value)}
-                className="mb-4 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                className="mb-4 w-full cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
               >
                 {myChallenges.map((c) => (
                   <option key={c.challengeId} value={c.challengeId}>

@@ -94,7 +94,7 @@ const ChallengeCard = ({
             if (joined) openDetail();
             else onJoin();
           }}
-          className={`rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`rounded-lg bg-[var(--color-eco)] cursor-pointer px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${
             isAdmin ? "flex-1" : "w-full"
           }`}
         >

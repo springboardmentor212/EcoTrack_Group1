@@ -15,7 +15,7 @@ function NotificationBell() {
           ? `Notifications, ${unreadCount} unread`
           : "Notifications"
       }
-      className="relative text-[var(--color-slate)]"
+      className="relative text-[var(--color-slate)] cursor-pointer"
     >
       <Bell size={20} />
       {unreadCount > 0 && (
