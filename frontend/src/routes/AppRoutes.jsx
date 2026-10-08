@@ -50,7 +50,14 @@ function AppRoutes() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminUsers />
+              </ProtectedRoute>
+            }
+            />
       </Route>
     </Routes>
   );

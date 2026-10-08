@@ -24,6 +24,7 @@ export default function Login() {
       );
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       toast.success(res.data.message || "Logged in successfully!");
       navigate("/user-dashboard");
     } catch (error) {
