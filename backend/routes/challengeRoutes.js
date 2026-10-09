@@ -3,7 +3,9 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   createChallenge,
+  updateChallenge,
   listChallenges,
+  getMyChallenges,
   getChallengeDetail,
   joinChallenge,
   refreshMyProgress,
@@ -13,7 +15,9 @@ router.use(authMiddleware);
 
 router.post("/", createChallenge);
 router.get("/", listChallenges);
+router.get("/mine", getMyChallenges);
 router.get("/:id", getChallengeDetail);
+router.put("/:id", updateChallenge);
 router.post("/:id/join", joinChallenge);
 router.get("/:id/progress", refreshMyProgress);
 

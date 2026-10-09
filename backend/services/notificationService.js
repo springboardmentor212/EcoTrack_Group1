@@ -1,10 +1,10 @@
-// const Notification = require('../models/Notification');
+const Notification = require("../models/Notification");
 const nodemailer = require("nodemailer");
 
 let transporter = null;
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   transporter = nodemailer.createTransport({
-    service: "gmail", // Replace with your service if different
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -13,21 +13,29 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 }
 
 /**
- * @param {{userId: string, title: string, message: string, type: 'system'|'goal'|'challenge'|'ai', sendEmail?: boolean, userEmail?: string}} params
+ * Creates one notification. If dedupKey is given and the user already has a
+ * notification with that key, nothing is created and null is returned.
  */
 async function createNotification({
   userId,
   title,
   message,
   type,
+  dedupKey = null,
   sendEmail = false,
   userEmail,
 }) {
+  if (dedupKey) {
+    const exists = await Notification.exists({ userId, dedupKey });
+    if (exists) return null;
+  }
+
   const notification = await Notification.create({
     userId,
     title,
     message,
     type,
+    dedupKey,
   });
 
   if (sendEmail && userEmail) {
@@ -35,6 +43,24 @@ async function createNotification({
   }
 
   return notification;
+}
+
+/**
+ * Sends the same notification to many users. Never throws.
+ * @param {Array<string|ObjectId>} userIds
+ */
+async function notifyMany(userIds, { title, message, type, dedupKey = null }) {
+  await Promise.all(
+    userIds.map((userId) =>
+      createNotification({
+        userId,
+        title,
+        message,
+        type,
+        dedupKey: dedupKey ? `${dedupKey}:${userId}` : null,
+      }).catch((e) => console.error("notifyMany failed:", e.message)),
+    ),
+  );
 }
 
 async function sendEmailNotification(toEmail, subject, text) {
@@ -56,5 +82,6 @@ async function sendEmailNotification(toEmail, subject, text) {
 
 module.exports = {
   createNotification,
+  notifyMany,
   sendEmailNotification,
 };

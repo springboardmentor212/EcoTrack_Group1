@@ -5,7 +5,6 @@ import {
   Target,
   Trophy,
   Medal,
-  FileText,
   Search,
   Sparkles,
   User,
@@ -20,7 +19,6 @@ const NAV_ITEMS = [
   { to: "/challenges", icon: Trophy, label: "Challenges" },
   { to: "/leaderboard", icon: Medal, label: "Leaderboard" },
   { to: "/search", icon: Search, label: "Search" },
-  { to: "/reports", icon: FileText, label: "Reports" },
   { to: "/recommendations", icon: Sparkles, label: "Recommendations" },
   { to: "/profile", icon: User, label: "Profile" },
 ];

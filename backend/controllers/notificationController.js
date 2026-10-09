@@ -1,4 +1,4 @@
-// const Notification = require('../models/Notification');
+const Notification = require("../models/Notification");
 
 async function listNotifications(req, res) {
   try {
@@ -33,7 +33,7 @@ async function markAsRead(req, res) {
     const userId = req.user.id || req.user.userId || req.user._id;
     const notification = await Notification.findOneAndUpdate(
       { _id: id, userId },
-      { isRead: true },
+      { isRead: true, readAt: new Date() },
       { new: true },
     );
 
@@ -55,7 +55,10 @@ async function markAsRead(req, res) {
 async function markAllAsRead(req, res) {
   try {
     const userId = req.user.id || req.user.userId || req.user._id;
-    await Notification.updateMany({ userId, isRead: false }, { isRead: true });
+    await Notification.updateMany(
+      { userId, isRead: false },
+      { isRead: true, readAt: new Date() },
+    );
     return res
       .status(200)
       .json({ success: true, message: "All notifications marked as read" });

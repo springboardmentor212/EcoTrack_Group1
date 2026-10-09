@@ -1,72 +1,53 @@
-import { useState } from "react";
-import { toast } from "sonner";
-
 function RecommendationCard({
   category,
   title,
-  reduction,
-  description,
+  description = "",
+  status,
+  onAccept,
+  onDismiss,
 }) {
-  const [dismissed, setDismissed] = useState(false);
-
-  if (dismissed) {
-    return null;
-  }
-
-  const categoryStyles = {
-    Transportation: "bg-blue-100 text-blue-600",
-    Energy: "bg-amber-100 text-amber-600",
-    Water: "bg-cyan-100 text-cyan-600",
-  };
-
-  const handleAccept = () => {
-    toast.success("Recommendation accepted!");
-  };
-
-  const handleDismiss = () => {
-    setDismissed(true);
-  };
+  const [text] = description.split("Potential reduction:");
+  const savings = description.match(/([\d.]+)\s*kg/i)?.[1];
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3.5">
-      <span
-        className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-          categoryStyles[category]
-        }`}
-      >
-        {category}
-      </span>
-
-      <h3 className="mt-2 text-sm font-bold text-slate-900">
-        {title}
-      </h3>
-
-      <p className="mt-1 text-[11px] leading-4 text-slate-500">
-        Potential reduction: {reduction}
-        {description && (
-          <>
-            {" "}
-            · {description}
-          </>
+    <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          {category}
+        </span>
+        {savings && (
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+            Saves {savings} kg CO₂
+          </span>
         )}
+      </div>
+
+      <h3 className="mt-3 text-base font-bold text-slate-900">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        {text.trim()}
       </p>
 
-      <div className="mt-3 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={handleAccept}
-          className="rounded-md bg-[#10b981] px-3 py-1.5 text-xs font-semibold text-white"
-        >
-          Accept
-        </button>
-
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="rounded-md border border-[#0284c7] px-3 py-1.5 text-xs font-semibold text-[#0284c7]"
-        >
-          Dismiss
-        </button>
+      <div className="mt-auto flex justify-end gap-2 pt-4">
+        {status === "accepted" ? (
+          <span className="rounded-md bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+            Accepted ✓
+          </span>
+        ) : (
+          <>
+            <button
+              onClick={onAccept}
+              className="rounded-md bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600"
+            >
+              Accept
+            </button>
+            <button
+              onClick={onDismiss}
+              className="rounded-md border border-sky-600 px-4 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50"
+            >
+              Dismiss
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
