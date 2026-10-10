@@ -76,7 +76,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Milestone 4: suspended users cannot log in
     if (user.status === "suspended") {
       return res.status(403).json({
         code: "ACCOUNT_SUSPENDED",
