@@ -76,6 +76,17 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Milestone 4: suspended users cannot log in
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        code: "ACCOUNT_SUSPENDED",
+        message: "Your account has been suspended. Contact an administrator.",
+      });
+    }
+
+    user.lastActiveAt = new Date();
+    await User.updateOne({ _id: user._id }, { $set: { lastActiveAt: user.lastActiveAt } });
+
     const token = generateToken(user._id, user.role);
     res.status(200).json({
       message: "Login successful.",
