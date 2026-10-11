@@ -1,3 +1,6 @@
+import AdminUsers from "../pages/AdminUsers";
+import AdminChallengesPage from"../pages/admin/AdminChallengesPage";
+import AdminReportsPage from "../pages/admin/AdminReportsPage";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "../pages/Login";
@@ -19,7 +22,6 @@ import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ChallengeDetail from "../pages/ChallengeDetail";
 import Leaderboard from "../pages/Leaderboard";
-import AdminUsers from "../pages/AdminUsers";
 function AppRoutes() {
   return (
     <Routes>
@@ -53,12 +55,30 @@ function AppRoutes() {
         <Route
             path="/admin/users"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminUsers />
               </ProtectedRoute>
             }
             />
+                <Route
+          path="/admin/challenges"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminChallengesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminReportsPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
+
     </Routes>
   );
 }

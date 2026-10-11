@@ -27,7 +27,8 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const location = useLocation();
-  const { name, initial, email, loading } = useCurrentUser();
+  const { profile, name, initial, email, loading } = useCurrentUser();
+  const isAdmin = profile?.role === "admin";  
 
   return (
     <aside className="w-64 flex-shrink-0 bg-[var(--color-primary)] flex flex-col h-screen">
@@ -37,12 +38,12 @@ export default function Sidebar() {
         </div>
         <span className="text-lg font-bold text-white">EcoTrack</span>
       </div>
-
-      <nav className="flex-1 px-4 flex flex-col gap-1">
+      <nav className="flex-1 px-4 flex flex-col gap-1 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const isActive =
             location.pathname === item.to ||
             location.pathname.startsWith(item.to + "/");
+
           return (
             <Link
               key={item.to}
@@ -58,8 +59,39 @@ export default function Sidebar() {
             </Link>
           );
         })}
-      </nav>
 
+        {isAdmin && (
+          <>
+            <p className="px-3 pt-5 pb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+              Admin
+            </p>
+
+            {[
+              { to: "/admin/users", label: "Manage Users" },
+              { to: "/admin/challenges", label: "Manage Challenges" },
+              { to: "/admin/reports", label: "Manage Reports" },
+            ].map((item) => {
+              const isActive =
+                location.pathname === item.to ||
+                location.pathname.startsWith(item.to + "/");
+
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+                    isActive
+                      ? "bg-[var(--color-secondary)] font-medium"
+                      : "text-white/70 hover:bg-white/5"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </>
+        )}
+      </nav>
       <div className="p-4 flex items-center gap-3 border-t border-white/10">
         <div className="h-9 w-9 rounded-full bg-[var(--color-eco)] flex items-center justify-center text-white font-semibold text-sm">
           {loading ? "…" : initial}

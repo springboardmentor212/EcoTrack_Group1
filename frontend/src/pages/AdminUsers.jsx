@@ -18,6 +18,14 @@ const PAGE_SIZE = 10;
 
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(search);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [search]);
   const [role, setRole] = useState("all");
   const [status, setStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,6 +33,7 @@ export default function AdminUsers() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
+const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -53,7 +62,9 @@ export default function AdminUsers() {
         limit: PAGE_SIZE,
       };
 
-      if (search.trim()) params.search = search.trim();
+      if (debouncedSearch.trim()) {
+          params.search = debouncedSearch.trim();
+      }
       if (role !== "all") params.role = role;
       if (status !== "all") params.status = status;
 
@@ -68,6 +79,7 @@ export default function AdminUsers() {
         })),
       );
       setTotalPages(Math.max(data.totalPages || 1, 1));
+	setTotalUsers(data.total ?? 0);
     } catch (err) {
       setError(
         err.response?.data?.message || "Could not load users. Please try again.",
@@ -75,7 +87,7 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, search, role, status]);
+  }, [currentPage, debouncedSearch, role, status]);
 
   useEffect(() => {
     loadStats();
@@ -257,10 +269,12 @@ export default function AdminUsers() {
               />
 
               <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+  		currentPage={currentPage}
+  		totalPages={totalPages}
+  		totalItems={totalUsers}
+  		pageSize={PAGE_SIZE}
+  		onPageChange={setCurrentPage}
+		/>
             </>
           )}
         </div>
@@ -296,6 +310,7 @@ export default function AdminUsers() {
               : "Reactivate"
         }
         onConfirm={handleConfirmAction}
+        isLoading={actionLoading}
         onClose={() => {
           if (!actionLoading) setPendingAction(null);
         }}

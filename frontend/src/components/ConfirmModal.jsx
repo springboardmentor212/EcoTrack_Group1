@@ -6,21 +6,36 @@ export default function ConfirmModal({
   cancelText = "Cancel",
   onConfirm,
   onClose,
+  isLoading = false,
 }) {
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-[var(--color-surface)] p-6 shadow-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        aria-describedby="confirm-modal-message"
+        className="w-full max-w-md rounded-2xl bg-[var(--color-surface)] p-6 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--color-primary)]">
+            <h2
+              id="confirm-modal-title"
+              className="text-lg font-semibold text-[var(--color-primary)]"
+            >
               {title}
             </h2>
 
-            <p className="mt-2 text-sm text-[var(--color-slate)]">
+            <p
+              id="confirm-modal-message"
+              className="mt-2 text-sm text-[var(--color-slate)]"
+            >
               {message}
             </p>
           </div>
@@ -28,10 +43,11 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-xl leading-none text-[var(--color-slate)] hover:text-[var(--color-primary)]"
+            disabled={isLoading}
+            className="text-xl leading-none text-[var(--color-slate)] hover:text-[var(--color-primary)] disabled:opacity-50"
             aria-label="Close"
           >
-            ×
+            &times;
           </button>
         </div>
 
@@ -39,7 +55,8 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-[var(--color-slate)] hover:bg-gray-50"
+            disabled={isLoading}
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-[var(--color-slate)] hover:bg-gray-50 disabled:opacity-50"
           >
             {cancelText}
           </button>
@@ -47,9 +64,10 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            disabled={isLoading}
+            className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {confirmText}
+            {isLoading ? "Please wait..." : confirmText}
           </button>
         </div>
       </div>
