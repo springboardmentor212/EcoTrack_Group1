@@ -1,6 +1,6 @@
 import ChallengeProgressTracker from "../components/ChallengeProgressTracker";
 import ParticipantList from "../components/ParticipantList";
-import ChallengeLeaderboard from "../components/ChallengeLeaderboard";
+import LeaderboardTable from "../components/LeaderboardTable";
 
 const ChallengeDetail = () => {
     return (
@@ -56,7 +56,17 @@ const ChallengeDetail = () => {
                 <ParticipantList />
             </div>
             <div className="mt-6">
-    <ChallengeLeaderboard />
+    <h2 className="mb-3 text-lg font-semibold text-[var(--color-slate)]">
+        Challenge Leaderboard
+    </h2>
+    <LeaderboardTable
+        users={[
+            { name: "Arun", score: 90 },
+            { name: "Priya", score: 80 },
+            { name: "Varsha", score: 60 },
+            { name: "Kavin", score: 45 },
+        ]}
+    />
 </div>
 
         </div>
