@@ -159,7 +159,7 @@ const ChallengeCard = ({
         </div>
       </div>
 
-      {/* Dates and Duration */}
+      {/* Duration and Dates */}
       <div className="mt-4 space-y-1 text-sm text-[var(--color-muted)]">
         <p>Duration: {duration || "Not set"}</p>
         <p>Start Date: {formatDate(startDate)}</p>
@@ -168,43 +168,45 @@ const ChallengeCard = ({
 
       {/* Actions */}
       <div className="mt-5 flex flex-wrap gap-3">
-        {isAdmin && !isEnded && (
+        {isAdmin && (
           <>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onEdit?.();
-              }}
-              className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
-            >
-              Edit
-            </button>
+            {!isEnded && (
+              <>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEdit?.();
+                  }}
+                  className="flex-1 rounded-lg border border-[var(--color-eco)] px-4 py-2 text-sm font-medium text-[var(--color-eco)]"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEndEarly?.();
+                  }}
+                  className="flex-1 rounded-lg border border-amber-300 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-50"
+                >
+                  End Early
+                </button>
+              </>
+            )}
 
             <button
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
-                onEndEarly?.();
+                onDelete?.();
               }}
-              className="flex-1 rounded-lg border border-amber-300 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-50"
+              className="w-full rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
             >
-              End Early
+              Delete
             </button>
           </>
-        )}
-
-        {isAdmin && isEnded && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete?.();
-            }}
-            className="w-full rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-          >
-            Delete
-          </button>
         )}
 
         {!isAdmin && (
