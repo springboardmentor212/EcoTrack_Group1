@@ -15,6 +15,7 @@ const challengeRoutes = require("./routes/challengeRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const gamificationRoutes = require("./routes/gamificationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 connectDB();
 
@@ -28,6 +29,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api/admin/users", adminRoutes);
 app.use("/api/carbon", carbonRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
