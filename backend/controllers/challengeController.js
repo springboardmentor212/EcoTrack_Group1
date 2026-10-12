@@ -3,17 +3,17 @@ const Challenge = require("../models/Challenge");
 const UserChallenge = require("../models/UserChallenge");
 const User = require("../models/User");
 const { getAllCategoryEmissionsInRange } = require("../utils/aggregations");
+const { computeStatus } = require("../utils/challengeStatus");
 const {
   createNotification,
   notifyMany,
 } = require("../services/notificationService");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const CATEGORIES = ["transportation", "energy", "food", "waste", "water"];
 
 function getStatus(challenge, now = new Date()) {
-  if (now < challenge.startDate) return "upcoming";
-  if (now > challenge.endDate) return "completed";
-  return "active";
+  return computeStatus(challenge, now);
 }
 
 function getMembershipStatus(challenge, total, now = new Date()) {
@@ -32,16 +32,6 @@ function parseEnd(value) {
   const d = new Date(value);
   d.setUTCHours(23, 59, 59, 999);
   return d;
-}
-
-async function ensureAdmin(req, res) {
-  const user = await User.findById(req.user.userId).select("role");
-  const role = String(user?.role || "").toLowerCase();
-  if (role === "admin" || role === "administrator") return true;
-  res
-    .status(403)
-    .json({ success: false, message: "Only admins can manage challenges" });
-  return false;
 }
 
 async function getUserTotal(userId, challenge) {
@@ -118,12 +108,20 @@ function sendError(res, err, fallback) {
   return res.status(500).json({ success: false, message: fallback });
 }
 
+const badRequest = (res, message) =>
+  res.status(400).json({ success: false, message });
+
 async function createChallenge(req, res) {
   try {
-    if (!(await ensureAdmin(req, res))) return;
-
-    const { title, description, category, startDate, endDate, targetMetric } =
-      req.body;
+    const {
+      title,
+      description,
+      category,
+      startDate,
+      endDate,
+      targetMetric,
+      rewardPoints,
+    } = req.body;
 
     if (
       !title ||
@@ -134,23 +132,47 @@ async function createChallenge(req, res) {
       targetMetric === undefined ||
       targetMetric === ""
     ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "title, description, category, startDate, endDate and targetMetric are required",
-      });
+      return badRequest(
+        res,
+        "title, description, category, startDate, endDate and targetMetric are required",
+      );
+    }
+    if (!CATEGORIES.includes(category)) {
+      return badRequest(
+        res,
+        `category must be one of: ${CATEGORIES.join(", ")}`,
+      );
+    }
+    if (!(Number(rewardPoints) > 0)) {
+      return badRequest(res, "Points must be above 0");
+    }
+    if (!(Number(targetMetric) >= 0)) {
+      return badRequest(res, "targetMetric must be a valid number");
     }
 
-    const challenge = await Challenge.create({
+    const start = parseStart(startDate);
+    const end = parseEnd(endDate);
+    if (isNaN(start) || isNaN(end)) {
+      return badRequest(res, "Valid start and end dates are required");
+    }
+    if (end <= start) {
+      return badRequest(res, "End date must be after start date");
+    }
+
+    const doc = {
       title,
       description,
       category,
-      startDate: parseStart(startDate),
-      endDate: parseEnd(endDate),
+      startDate: start,
+      endDate: end,
       targetMetric: Number(targetMetric),
+      rewardPoints: Number(rewardPoints),
       createdBy: req.user.userId,
       participants: [],
-    });
+    };
+    doc.status = computeStatus(doc);
+
+    const challenge = await Challenge.create(doc);
 
     try {
       const users = await User.find({ _id: { $ne: req.user.userId } }).select(
@@ -177,8 +199,6 @@ async function createChallenge(req, res) {
 
 async function updateChallenge(req, res) {
   try {
-    if (!(await ensureAdmin(req, res))) return;
-
     const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
       return res
@@ -192,9 +212,29 @@ async function updateChallenge(req, res) {
         .status(404)
         .json({ success: false, message: "Challenge not found" });
     }
+    if (getStatus(challenge) === "completed") {
+      return badRequest(res, "Ended challenges cannot be edited");
+    }
 
-    const { title, description, category, startDate, endDate, targetMetric } =
-      req.body;
+    const {
+      title,
+      description,
+      category,
+      startDate,
+      endDate,
+      targetMetric,
+      rewardPoints,
+    } = req.body;
+
+    if (category !== undefined && !CATEGORIES.includes(category)) {
+      return badRequest(
+        res,
+        `category must be one of: ${CATEGORIES.join(", ")}`,
+      );
+    }
+    if (rewardPoints !== undefined && !(Number(rewardPoints) > 0)) {
+      return badRequest(res, "Points must be above 0");
+    }
 
     if (title !== undefined) challenge.title = title;
     if (description !== undefined) challenge.description = description;
@@ -204,7 +244,18 @@ async function updateChallenge(req, res) {
     if (targetMetric !== undefined) {
       challenge.targetMetric = Number(targetMetric);
     }
+    if (rewardPoints !== undefined) {
+      challenge.rewardPoints = Number(rewardPoints);
+    }
 
+    if (isNaN(challenge.startDate) || isNaN(challenge.endDate)) {
+      return badRequest(res, "Valid start and end dates are required");
+    }
+    if (challenge.endDate <= challenge.startDate) {
+      return badRequest(res, "End date must be after start date");
+    }
+
+    challenge.status = computeStatus(challenge);
     await challenge.save();
     try {
       await notifyMany(challenge.participants, {
@@ -218,6 +269,77 @@ async function updateChallenge(req, res) {
     return res.status(200).json({ success: true, data: challenge });
   } catch (err) {
     return sendError(res, err, "Failed to update challenge");
+  }
+}
+
+async function endChallenge(req, res) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Challenge not found" });
+    }
+    const challenge = await Challenge.findById(id);
+    if (!challenge) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Challenge not found" });
+    }
+    if (getStatus(challenge) !== "active") {
+      return badRequest(res, "Only active challenges can be ended early");
+    }
+
+    const now = new Date();
+    challenge.endDate = now;
+    challenge.endedAt = now;
+    challenge.status = "completed";
+    await challenge.save();
+
+    try {
+      await notifyMany(challenge.participants, {
+        type: "challenge",
+        title: "Challenge ended early",
+        message: `"${challenge.title}" was ended early by an admin.`,
+      });
+    } catch (e) {
+      console.error("end challenge notification failed:", e.message);
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Challenge ended", data: challenge });
+  } catch (err) {
+    return sendError(res, err, "Failed to end challenge");
+  }
+}
+
+async function deleteChallenge(req, res) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.isValidObjectId(id)) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Challenge not found" });
+    }
+    const challenge = await Challenge.findById(id);
+    if (!challenge) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Challenge not found" });
+    }
+    if (getStatus(challenge) !== "completed") {
+      return badRequest(res, "Only ended challenges can be deleted");
+    }
+
+    await UserChallenge.deleteMany({ challengeId: challenge._id });
+    await challenge.deleteOne();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Challenge deleted" });
+  } catch (err) {
+    return sendError(res, err, "Failed to delete challenge");
   }
 }
 
@@ -467,6 +589,8 @@ async function refreshMyProgress(req, res) {
 module.exports = {
   createChallenge,
   updateChallenge,
+  endChallenge,
+  deleteChallenge,
   listChallenges,
   getMyChallenges,
   getChallengeDetail,

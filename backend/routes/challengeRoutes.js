@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
+const { adminOnly } = require("../middleware/roleMiddleware");
 const {
   createChallenge,
   updateChallenge,
+  endChallenge,
+  deleteChallenge,
   listChallenges,
   getMyChallenges,
   getChallengeDetail,
@@ -13,11 +16,14 @@ const {
 
 router.use(authMiddleware);
 
-router.post("/", createChallenge);
+router.post("/", adminOnly, createChallenge);
+router.put("/:id", adminOnly, updateChallenge);
+router.patch("/:id/end", adminOnly, endChallenge);
+router.delete("/:id", adminOnly, deleteChallenge);
+
 router.get("/", listChallenges);
 router.get("/mine", getMyChallenges);
 router.get("/:id", getChallengeDetail);
-router.put("/:id", updateChallenge);
 router.post("/:id/join", joinChallenge);
 router.get("/:id/progress", refreshMyProgress);
 
