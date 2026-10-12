@@ -28,17 +28,18 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const location = useLocation();
   const { profile, name, initial, email, loading } = useCurrentUser();
-  const isAdmin = profile?.role === "admin";  
+  const isAdmin = profile?.role === "admin";
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-[var(--color-primary)] flex flex-col h-screen">
+    <aside className="flex h-screen w-64 flex-shrink-0 flex-col bg-[var(--color-primary)]">
       <div className="flex items-center gap-2 p-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
           <Flower size={18} color="#FFFFFF" />
         </div>
         <span className="text-lg font-bold text-white">EcoTrack</span>
       </div>
-      <nav className="flex-1 px-4 flex flex-col gap-1 overflow-y-auto">
+
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4">
         {NAV_ITEMS.map((item) => {
           const isActive =
             location.pathname === item.to ||
@@ -48,7 +49,7 @@ export default function Sidebar() {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
                 isActive
                   ? "bg-[var(--color-secondary)] font-medium"
                   : "text-white/70 hover:bg-white/5"
@@ -62,14 +63,14 @@ export default function Sidebar() {
 
         {isAdmin && (
           <>
-            <p className="px-3 pt-5 pb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+            <p className="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-wider text-white/50">
               Admin
             </p>
 
             {[
-              { to: "/admin/users", label: "Manage Users" },
-              { to: "/admin/challenges", label: "Manage Challenges" },
-              { to: "/admin/reports", label: "Manage Reports" },
+              { to: "/admin/users", label: "Users" },
+              { to: "/admin/challenges", label: "Challenges" },
+              { to: "/admin/reports", label: "Reports" },
             ].map((item) => {
               const isActive =
                 location.pathname === item.to ||
@@ -79,7 +80,7 @@ export default function Sidebar() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
                     isActive
                       ? "bg-[var(--color-secondary)] font-medium"
                       : "text-white/70 hover:bg-white/5"
@@ -92,15 +93,16 @@ export default function Sidebar() {
           </>
         )}
       </nav>
-      <div className="p-4 flex items-center gap-3 border-t border-white/10">
-        <div className="h-9 w-9 rounded-full bg-[var(--color-eco)] flex items-center justify-center text-white font-semibold text-sm">
+
+      <div className="flex items-center gap-3 border-t border-white/10 p-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-eco)] text-sm font-semibold text-white">
           {loading ? "…" : initial}
         </div>
         <div>
           <p className="text-sm font-medium text-white">
             {loading ? "Loading..." : name || "User"}
           </p>
-          <p className="text-xs text-white/60 truncate max-w-[140px]">
+          <p className="max-w-[140px] truncate text-xs text-white/60">
             {loading ? "" : email}
           </p>
         </div>

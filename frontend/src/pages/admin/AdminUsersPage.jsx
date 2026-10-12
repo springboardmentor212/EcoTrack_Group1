@@ -1,19 +1,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import StatCard from "../components/StatCard";
-import UserFilters from "../components/UserFilters";
-import UserManagementTable from "../components/UserManagementTable";
-import Pagination from "../components/Pagination";
-import ConfirmModal from "../components/ConfirmModal";
-import UserDetailModal from "../components/UserDetailModal";
+
+import StatCard from "../../components/StatCard";
+import UserFilters from "../../components/admin/UserFilters";
+import UserManagementTable from "../../components/admin/UserManagementTable";
+import Pagination from "../../components/Pagination";
+import ConfirmModal from "../../components/ConfirmModal";
+import UserDetailModal from "../../components/admin/UserDetailModal";
+
 import {
   getUserStats,
   getUsers,
   getUserDetail,
   updateUserRole,
   updateUserStatus,
-} from "../services/adminServices";
+} from "../../services/adminService";
 
 const PAGE_SIZE = 10;
 

@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 
 import Login from "../pages/Login";
@@ -21,7 +20,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import ChallengeDetail from "../pages/ChallengeDetail";
 import Leaderboard from "../pages/Leaderboard";
 
-import AdminUsers from "../pages/AdminUsers";
+import AdminUsersPage from "../pages/admin/AdminUsersPage";
 import AdminChallengesPage from "../pages/admin/AdminChallengesPage";
 import AdminReportsPage from "../pages/admin/AdminReportsPage";
 
@@ -63,7 +62,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         >
-          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route
             path="/admin/challenges"
             element={<AdminChallengesPage />}
