@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const challengeSchema = new mongoose.Schema(
@@ -37,6 +38,12 @@ const challengeSchema = new mongoose.Schema(
       },
     },
 
+    rewardPoints: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     endedAt: {
       type: Date,
       default: null,
@@ -66,7 +73,7 @@ const challengeSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["upcoming", "active", "ended"],
+      enum: ["upcoming", "active", "completed"],
       default: "upcoming",
     },
   },
@@ -77,6 +84,7 @@ const challengeSchema = new mongoose.Schema(
 
 // Admin list indexes
 challengeSchema.index({ category: 1, status: 1 });
+challengeSchema.index({ status: 1, category: 1 });
 challengeSchema.index({ startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model("Challenge", challengeSchema);

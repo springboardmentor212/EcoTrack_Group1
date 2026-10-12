@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -36,6 +37,11 @@ const userSchema = new mongoose.Schema(
     },
 
     lastActiveAt: {
+      type: Date,
+      default: null,
+    },
+
+    roleChangedAt: {
       type: Date,
       default: null,
     },

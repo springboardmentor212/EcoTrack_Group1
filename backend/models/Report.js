@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const reportSchema = new mongoose.Schema(
@@ -5,44 +6,50 @@ const reportSchema = new mongoose.Schema(
     scope: {
       type: String,
       enum: ["user", "admin"],
-      required: true,
+      default: "user",
     },
 
     periodFrom: {
       type: Date,
-      required: true,
     },
 
     periodTo: {
       type: Date,
-      required: true,
     },
 
     format: {
       type: String,
       enum: ["pdf", "excel"],
-      required: true,
+      default: "pdf",
     },
 
     includes: {
-      type: [String],
+      type: [
+        {
+          type: String,
+          enum: [
+            "emissionsByCategory",
+            "goalResults",
+            "goalProgress",
+            "challengeParticipation",
+            "perUserBreakdown",
+          ],
+        },
+      ],
       default: [],
     },
 
     fileName: {
       type: String,
-      required: true,
     },
 
     filePath: {
       type: String,
-      required: true,
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
   },
   {
@@ -50,7 +57,8 @@ const reportSchema = new mongoose.Schema(
   }
 );
 
-// Admin list index
+// Admin list indexes
 reportSchema.index({ createdAt: -1 });
+reportSchema.index({ scope: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Report", reportSchema);
