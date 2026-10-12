@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import StatCard from "../components/StatCard";
@@ -19,13 +20,6 @@ const PAGE_SIZE = 10;
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedSearch(search);
-  }, 400);
-
-  return () => clearTimeout(timer);
-}, [search]);
   const [role, setRole] = useState("all");
   const [status, setStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,13 +27,21 @@ export default function AdminUsers() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
-const [totalUsers, setTotalUsers] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -63,8 +65,9 @@ const [totalUsers, setTotalUsers] = useState(0);
       };
 
       if (debouncedSearch.trim()) {
-          params.search = debouncedSearch.trim();
+        params.search = debouncedSearch.trim();
       }
+
       if (role !== "all") params.role = role;
       if (status !== "all") params.status = status;
 
@@ -78,11 +81,13 @@ const [totalUsers, setTotalUsers] = useState(0);
           status: user.status || "active",
         })),
       );
+
       setTotalPages(Math.max(data.totalPages || 1, 1));
-	setTotalUsers(data.total ?? 0);
+      setTotalUsers(data.total ?? 0);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Could not load users. Please try again.",
+        err.response?.data?.message ||
+          "Could not load users. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -137,6 +142,7 @@ const [totalUsers, setTotalUsers] = useState(0);
     try {
       const response = await getUserDetail(user.id);
       const detail = response.data.data;
+
       setSelectedUser({
         ...detail,
         id: detail._id || detail.id,
@@ -151,11 +157,13 @@ const [totalUsers, setTotalUsers] = useState(0);
 
   const handleRoleChange = (user, nextRole) => {
     if (user.role === nextRole) return;
+
     setPendingAction({ type: "role", user, value: nextRole });
   };
 
   const handleToggleStatus = (user) => {
     const nextStatus = user.status === "active" ? "suspended" : "active";
+
     setPendingAction({ type: "status", user, value: nextStatus });
   };
 
@@ -173,27 +181,25 @@ const [totalUsers, setTotalUsers] = useState(0);
 
       toast.success(response.data.message || "User updated successfully.");
       setPendingAction(null);
+
       await Promise.all([loadStats(), loadUsers()]);
 
       if (selectedUser?.id === user.id) {
         setSelectedUser((previous) => ({
           ...previous,
-          ...(type === "role"
-            ? { role: value }
-            : { status: value }),
+          ...(type === "role" ? { role: value } : { status: value }),
         }));
       }
     } catch (err) {
       toast.error(
         err.response?.data?.message || "Could not update this user.",
       );
+
       await Promise.all([loadStats(), loadUsers()]);
     } finally {
       setActionLoading(false);
     }
   };
-
-  const filteredUsers = users;
 
   return (
     <div className="space-y-6">
@@ -262,19 +268,19 @@ const [totalUsers, setTotalUsers] = useState(0);
           ) : (
             <>
               <UserManagementTable
-                users={filteredUsers}
+                users={users}
                 onView={handleView}
                 onRoleChange={handleRoleChange}
                 onToggleStatus={handleToggleStatus}
               />
 
               <Pagination
-  		currentPage={currentPage}
-  		totalPages={totalPages}
-  		totalItems={totalUsers}
-  		pageSize={PAGE_SIZE}
-  		onPageChange={setCurrentPage}
-		/>
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalUsers}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+              />
             </>
           )}
         </div>
