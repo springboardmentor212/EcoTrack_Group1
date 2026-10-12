@@ -44,7 +44,8 @@ function formatProfile(profile, user) {
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const userId = req.user.userId || req.user.id || req.user._id;
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -60,7 +61,8 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const userId = req.user.userId || req.user.id || req.user._id;
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

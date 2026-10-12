@@ -1,44 +1,22 @@
-
+const FILTERS = ["All", "Active", "Completed"];
 
 const ChallengeFilter = ({ selectedFilter, onFilterChange }) => {
-    return (
-        <div className="mt-6 flex flex-wrap gap-3">
-
-            <button
-                onClick={() => onFilterChange("All")}
-                className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                    selectedFilter === "All"
-                        ? "bg-[var(--color-eco)] text-white"
-                        : "bg-white border border-gray-200 text-[var(--color-slate)]"
-                }`}
-            >
-                All
-            </button>
-
-            <button
-                onClick={() => onFilterChange("Active")}
-                className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                    selectedFilter === "Active"
-                        ? "bg-[var(--color-eco)] text-white"
-                        : "bg-white border border-gray-200 text-[var(--color-slate)]"
-                }`}
-            >
-                Active
-            </button>
-
-            <button
-                onClick={() => onFilterChange("Completed")}
-                className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                    selectedFilter === "Completed"
-                        ? "bg-[var(--color-eco)] text-white"
-                        : "bg-white border border-gray-200 text-[var(--color-slate)]"
-                }`}
-            >
-                Completed
-            </button>
-
-        </div>
-    );
+return ( <div className="mt-6 flex flex-wrap gap-3">
+{FILTERS.map((filter) => (
+<button
+key={filter}
+type="button"
+onClick={() => onFilterChange(filter)}
+aria-pressed={selectedFilter === filter}
+className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        selectedFilter === filter
+                            ? "bg-[var(--color-eco)] text-white"
+                            : "border border-gray-200 bg-white text-[var(--color-slate)] hover:bg-gray-50"
+                    }`}
+>
+{filter} </button>
+))} </div>
+);
 };
 
 export default ChallengeFilter;
