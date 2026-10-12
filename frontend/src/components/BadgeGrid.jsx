@@ -1,98 +1,110 @@
+import { useEffect, useState } from "react";
+import * as leaderboardService from "../services/leaderboardService";
+
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
 const BadgeGrid = () => {
-    const badges = [
-        {
-            name: "Eco Starter",
-            description: "Complete your first sustainability challenge",
-            image: "/badges/ecotrack.png",
-            unlocked: true,
-        },
-        {
-            name: "Daily Recycler",
-            description: "Complete activities for 3 consecutive days",
-            image: "/badges/recycle.png",
-            unlocked: true,
-        },
-        {
-            name: "Green Warrior",
-            description: "Complete 5 sustainability challenges",
-            image: "/badges/green%20warrior.jpeg",
-            unlocked: true,
-        },
-        {
-            name: "Carbon Saver",
-            description: "Reduce your carbon footprint",
-            image: "/badges/carbon%20saver.jpeg",
-            unlocked: false,
-        },
-        {
-            name: "Consistency Champ",
-            description: "Stay active for 7 consecutive days",
-            image: "/badges/calendar.jpeg",
-            unlocked: false,
-            progress: "5/7",
-        },
-        {
-            name: "Planet Protector",
-            description: "Complete 10 sustainability challenges",
-            image: "/badges/planet%20saver.jpeg",
-            unlocked: false,
-            progress: "6/10",
-        },
-    ];
+  const [badges, setBadges] = useState([]);
+  const [rewardPoints, setRewardPoints] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    return (
-        <div className="mt-8">
-            <h2 className="text-xl font-semibold text-[var(--color-slate)]">
-                Badges
-            </h2>
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await leaderboardService.getBadges();
+        setBadges(res.data.data || []);
+        setRewardPoints(res.data.rewardPoints || 0);
+      } catch (err) {
+        setError("Could not load badges");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-            <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {badges.map((badge) => (
-                    <div
-                        key={badge.name}
-                        className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                        <div className="flex items-center gap-4">
+  const earnedCount = badges.filter((b) => b.earned).length;
 
-                            {/* Badge Image */}
-                            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-emerald-400 bg-emerald-50 shadow-md shadow-emerald-100">
-                                <img
-                                    src={badge.image}
-                                    alt={badge.name}
-                                    className="h-16 w-16 object-contain"
-                                />
-                            </div>
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[var(--color-slate)]">
+          Badges
+        </h2>
 
-                            {/* Badge Details */}
-                            <div className="min-w-0 flex-1">
-                                <h3 className="font-semibold text-[var(--color-slate)]">
-                                    {badge.name}
-                                </h3>
+        {!loading && !error && (
+          <span className="text-xs text-[var(--color-muted)]">
+            {earnedCount} of {badges.length} earned
+          </span>
+        )}
+      </div>
 
-                                <p className="mt-1 text-sm text-[var(--color-muted)]">
-                                    {badge.description}
-                                </p>
+      {!loading && !error && (
+        <p className="mt-1 text-xs text-[var(--color-eco)]">
+          Reward points: {rewardPoints}
+        </p>
+      )}
 
-                                {badge.unlocked ? (
-                                    <p className="mt-2 text-sm font-medium text-[var(--color-eco)]">
-                                        ✓ Earned
-                                    </p>
-                                ) : badge.progress ? (
-                                    <p className="mt-2 text-sm font-medium text-orange-500">
-                                        Progress: {badge.progress}
-                                    </p>
-                                ) : (
-                                    <p className="mt-2 text-sm font-medium text-gray-500">
-                                        In Progress
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
+      {loading && (
+        <p className="mt-4 text-sm text-[var(--color-muted)]">
+          Loading badges...
+        </p>
+      )}
+      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+
+      <div className="mt-5 grid grid-cols-3 gap-5">
+        {badges.map((badge) => (
+          <div
+            key={badge._id}
+            tabIndex={0}
+            className="group relative flex flex-col items-center text-center outline-none"
+          >
+            <div
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 ${
+                badge.earned ? "" : "opacity-40 grayscale"
+              }`}
+            >
+              <img
+                src={badge.iconUrl}
+                alt={badge.name}
+                className="h-10 w-10 object-contain"
+              />
             </div>
-        </div>
-    );
+
+            <p
+              className={`mt-2 text-xs font-medium ${
+                badge.earned
+                  ? "text-[var(--color-slate)]"
+                  : "text-[var(--color-muted)]"
+              }`}
+            >
+              {badge.name}
+            </p>
+
+            {/* Tooltip */}
+            <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[var(--color-primary)] px-3 py-2 text-left shadow-lg group-hover:block group-focus:block">
+              <p className="text-xs font-semibold text-white">
+                {badge.earned ? "Earned" : "How to earn"}
+              </p>
+              <p className="mt-1 text-xs leading-4 text-white/80">
+                {badge.description || "Keep tracking to unlock this badge."}
+              </p>
+              {badge.earned && badge.earnedAt && (
+                <p className="mt-1 text-[10px] text-[var(--color-eco)]">
+                  Unlocked on {formatDate(badge.earnedAt)}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default BadgeGrid;

@@ -7,24 +7,41 @@ export default function useCurrentUser() {
 
   useEffect(() => {
     let mounted = true;
+
     userService
       .getMyProfile()
       .then((res) => {
-        if (mounted) setProfile(res.data);
+        if (mounted) {
+          setProfile(res.data);
+        }
       })
       .catch((err) => {
         console.error("Failed to load current user", err);
       })
       .finally(() => {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       });
+
     return () => {
       mounted = false;
     };
   }, []);
 
   const name = profile?.fullName || "";
-  const initial = name ? name.charAt(0).toUpperCase() : "?";
+  const initial = name
+    ? name.charAt(0).toUpperCase()
+    : "?";
 
-  return { profile, name, initial, email: profile?.email || "", loading };
+  const role = profile?.role || "user";
+
+  return {
+    profile,
+    name,
+    initial,
+    email: profile?.email || "",
+    role,
+    loading,
+  };
 }

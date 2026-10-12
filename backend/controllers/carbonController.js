@@ -1,3 +1,4 @@
+const { checkCapAndNotify } = require("../services/capAlertService");
 const CarbonEntry = require("../models/CarbonEntry");
 
 const createCarbonEntry = async (req, res) => {
@@ -15,6 +16,7 @@ const createCarbonEntry = async (req, res) => {
       description,
     });
 
+    await checkCapAndNotify(req.user.userId, carbonEntry.category);
     res.status(201).json({
       message: "Carbon entry created successfully.",
       carbonEntry,
@@ -87,6 +89,8 @@ const updateCarbonEntry = async (req, res) => {
         message: "Carbon entry not found.",
       });
     }
+
+    await checkCapAndNotify(req.user.userId, updatedEntry.category);
 
     res.status(200).json({
       message: "Carbon entry updated successfully.",

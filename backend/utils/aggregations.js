@@ -53,7 +53,8 @@ async function getAllCategoryEmissionsInRange(userId, startDate, endDate) {
   const CATEGORIES = ["transportation", "energy", "food", "waste", "water"];
   const totals = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
   rows.forEach((row) => {
-    totals[row._id] = row.total;
+    const key = String(row._id).toLowerCase();
+    totals[key] = (totals[key] || 0) + row.total;
   });
   return totals;
 }
