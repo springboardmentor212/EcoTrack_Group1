@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -19,7 +18,16 @@ import {
 
 const PAGE_SIZE = 10;
 
+const getCurrentUserId = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"))?.id || null;
+  } catch {
+    return null;
+  }
+};
+
 export default function AdminUsers() {
+  const currentUserId = getCurrentUserId();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [role, setRole] = useState("all");
@@ -146,9 +154,10 @@ export default function AdminUsers() {
       const detail = response.data.data;
 
       setSelectedUser({
+        ...user,
         ...detail,
-        id: detail._id || detail.id,
-        status: detail.status || "active",
+        id: detail._id || detail.id || user.id,
+        status: detail.status || user.status || "active",
       });
     } catch (err) {
       toast.error(
@@ -193,9 +202,7 @@ export default function AdminUsers() {
         }));
       }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Could not update this user.",
-      );
+      toast.error(err.response?.data?.message || "Could not update this user.");
 
       await Promise.all([loadStats(), loadUsers()]);
     } finally {
@@ -271,6 +278,7 @@ export default function AdminUsers() {
             <>
               <UserManagementTable
                 users={users}
+                currentUserId={currentUserId}
                 onView={handleView}
                 onRoleChange={handleRoleChange}
                 onToggleStatus={handleToggleStatus}

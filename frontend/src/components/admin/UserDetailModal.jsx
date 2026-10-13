@@ -1,14 +1,32 @@
+function Field({ label, children, wide = false }) {
+  return (
+    <div className={wide ? "col-span-2" : ""}>
+      <p className="text-xs text-[var(--color-slate)]">{label}</p>
+      <p className="mt-1 break-words font-medium capitalize text-[var(--color-primary)]">
+        {children}
+      </p>
+    </div>
+  );
+}
+
 export default function UserDetailModal({ isOpen, user, onClose }) {
   if (!isOpen || !user) return null;
 
+  const isAdmin = user.role === "admin";
   const ecoScore = user.ecoScore ?? user.eco_score;
-  const entriesCount = user.entriesCount ?? user.entries_count ?? user.totalEntries;
+  const entriesCount =
+    user.entriesCount ?? user.entries_count ?? user.totalEntries;
   const goals = user.goalsSummary ?? user.goals_summary;
+  const joinedRaw = user.joinedAt || user.createdAt || user.created_at;
 
   const displayValue = (value) =>
     value === undefined || value === null || value === ""
       ? "Not available"
       : value;
+
+  const joined = joinedRaw
+    ? new Date(joinedRaw).toLocaleDateString()
+    : "Not available";
 
   return (
     <div
@@ -27,7 +45,7 @@ export default function UserDetailModal({ isOpen, user, onClose }) {
             id="user-details-title"
             className="text-lg font-semibold text-[var(--color-primary)]"
           >
-            User Details
+            {isAdmin ? "Admin Details" : "User Details"}
           </h2>
 
           <button
@@ -41,64 +59,22 @@ export default function UserDetailModal({ isOpen, user, onClose }) {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Name</p>
-            <p className="mt-1 break-words font-medium text-[var(--color-primary)]">
-              {displayValue(user.name)}
-            </p>
-          </div>
+          <Field label="Name">{displayValue(user.name)}</Field>
+          <Field label="Email">{displayValue(user.email)}</Field>
+          <Field label="Role">{displayValue(user.role)}</Field>
+          <Field label="Status">{displayValue(user.status)}</Field>
+          <Field label="Joined">{joined}</Field>
 
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Email</p>
-            <p className="mt-1 break-words font-medium text-[var(--color-primary)]">
-              {displayValue(user.email)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Role</p>
-            <p className="mt-1 capitalize font-medium text-[var(--color-primary)]">
-              {displayValue(user.role)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Status</p>
-            <p className="mt-1 capitalize font-medium text-[var(--color-primary)]">
-              {displayValue(user.status)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Eco Score</p>
-            <p className="mt-1 font-medium text-[var(--color-primary)]">
-              {displayValue(ecoScore)}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-[var(--color-slate)]">Entries Count</p>
-            <p className="mt-1 font-medium text-[var(--color-primary)]">
-              {displayValue(entriesCount)}
-            </p>
-          </div>
-
-          <div className="col-span-2">
-            <p className="text-xs text-[var(--color-slate)]">Goals Summary</p>
-            <p className="mt-1 font-medium text-[var(--color-primary)]">
-              {goals && typeof goals === "object"
-                ? `${goals.active ?? 0} active of ${goals.total ?? 0} total`
-                : displayValue(goals)}
-            </p>
-          </div>
-
-          {user.id && (
-            <div className="col-span-2">
-              <p className="text-xs text-[var(--color-slate)]">User ID</p>
-              <p className="mt-1 break-all font-medium text-[var(--color-primary)]">
-                {user.id}
-              </p>
-            </div>
+          {!isAdmin && (
+            <>
+              <Field label="Eco Score">{displayValue(ecoScore)}</Field>
+              <Field label="Entries Count">{displayValue(entriesCount)}</Field>
+              <Field label="Goals Summary" wide>
+                {goals && typeof goals === "object"
+                  ? `${goals.active ?? 0} active of ${goals.total ?? 0} total`
+                  : displayValue(goals)}
+              </Field>
+            </>
           )}
         </div>
 

@@ -26,7 +26,10 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       toast.success(res.data.message || "Logged in successfully!");
-      navigate("/user-dashboard");
+      navigate(
+        res.data.user.role === "admin" ? "/admin/users" : "/user-dashboard",
+        { replace: true },
+      );
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Login failed. Please try again.",
@@ -37,41 +40,46 @@ export default function Login() {
   };
 
   return (
-  <div className="min-h-screen flex bg-[var(--color-background)]">
-    {/* LEFT: Branding panel */}
-    <div className="hidden lg:flex lg:w-2/5 flex-col justify-center px-16 bg-[var(--color-primary)]">
-      <div className="flex items-center gap-2 mb-8">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-eco)]">
-          <Flower size={22} color="#FFFFFF" />
-        </div>
-        <span className="text-2xl font-bold text-white">EcoTrack</span>
-      </div>
-      <h2 className="text-3xl font-semibold text-white leading-snug">
-        Track your carbon footprint,<br />one step at a time.
-      </h2>
-      <p className="mt-4 text-white/70 text-base max-w-sm">
-        Join thousands of people building smarter, greener habits every day.
-      </p>
-    </div>
-
-    {/* RIGHT: Login card */}
-    <div className="flex w-full lg:w-3/5 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-8 shadow-[0_10px_25px_-5px_var(--color-primary)]">
-
-        {/* mobile-only logo, since left panel is hidden on small screens */}
-        <div className="flex lg:hidden items-center gap-2 mb-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
-            <Flower size={18} color="#FFFFFF" />
+    <div className="min-h-screen flex bg-[var(--color-background)]">
+      
+      <div className="hidden lg:flex lg:w-2/5 flex-col justify-center px-16 bg-[var(--color-primary)]">
+        <div className="flex items-center gap-2 mb-8">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-eco)]">
+            <Flower size={22} color="#FFFFFF" />
           </div>
-          <span className="text-lg font-semibold text-[var(--color-primary)]">EcoTrack</span>
+          <span className="text-2xl font-bold text-white">EcoTrack</span>
         </div>
-
-        <h1 className="text-xl font-bold text-[var(--color-primary)]">Welcome Back</h1>
-        <p className="mt-1 font-regular text-sm text-[var(--color-slate)]">
-          Sign in to track your carbon footprint
+        <h2 className="text-3xl font-semibold text-white leading-snug">
+          Track your carbon footprint,
+          <br />
+          one step at a time.
+        </h2>
+        <p className="mt-4 text-white/70 text-base max-w-sm">
+          Join thousands of people building smarter, greener habits every day.
         </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+      
+      <div className="flex w-full lg:w-3/5 items-center justify-center px-4 py-16">
+        <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-8 shadow-[0_10px_25px_-5px_var(--color-primary)]">
+          
+          <div className="flex lg:hidden items-center gap-2 mb-6">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
+              <Flower size={18} color="#FFFFFF" />
+            </div>
+            <span className="text-lg font-semibold text-[var(--color-primary)]">
+              EcoTrack
+            </span>
+          </div>
+
+          <h1 className="text-xl font-bold text-[var(--color-primary)]">
+            Welcome Back
+          </h1>
+          <p className="mt-1 font-regular text-sm text-[var(--color-slate)]">
+            Sign in to track your carbon footprint
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
             <div>
               <label
                 htmlFor="email"
@@ -117,7 +125,7 @@ export default function Login() {
                   {showPassword ? (
                     <EyeOff size={16} className="text-[var(--color-muted)]" />
                   ) : (
-                    <EyeOff size={16} className="text-[var(--color-muted)]" />
+                    <Eye size={16} className="text-[var(--color-muted)]" />
                   )}
                 </button>
               </div>
@@ -157,9 +165,8 @@ export default function Login() {
               </Link>
             </p>
           </form>
-
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }

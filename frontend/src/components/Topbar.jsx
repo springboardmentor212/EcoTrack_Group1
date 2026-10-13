@@ -5,11 +5,29 @@ import useCurrentUser from "../hooks/useCurrentUser";
 import NotificationBell from "./NotificationBell";
 import useSustainabilityScore from "../hooks/useSustainabilityScore";
 
+const getStoredRole = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"))?.role || "user";
+  } catch {
+    return "user";
+  }
+};
+
+function EcoScoreChip() {
+  const ecoScore = useSustainabilityScore();
+
+  return (
+    <span className="text-xs bg-[var(--color-eco)]/10 text-[var(--color-eco)] px-3 py-1 rounded-full font-medium">
+      Eco Score: {ecoScore ?? "—"}
+    </span>
+  );
+}
+
 export default function Topbar({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { name, loading } = useCurrentUser();
-  const ecoScore = useSustainabilityScore();
+  const isAdmin = getStoredRole() === "admin";
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -24,7 +42,8 @@ export default function Topbar({ children }) {
     const confirmed = window.confirm("Are you sure you want to logout?");
     if (confirmed) {
       localStorage.removeItem("token");
-      navigate("/");
+      localStorage.removeItem("user");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -43,34 +62,39 @@ export default function Topbar({ children }) {
             Welcome Back{loading ? "" : name ? `, ${name}` : ""}
           </h1>
           <p className="text-sm text-[var(--color-slate)] mt-1">
-            Today is {today} - Let's hit your green targets today!
+            {isAdmin
+              ? `Today is ${today} - Admin panel`
+              : `Today is ${today} - Let's hit your green targets today!`}
           </p>
         </div>
       </div>
+
       <div>{children}</div>
-      <div className="flex items-center gap-4">
-        <div className="relative w-64">
-          {!isOnSearchPage && (
-            <form onSubmit={handleSearchSubmit}>
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-slate)]"
-              />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search anything..."
-                className="pl-9 pr-4 py-2 rounded-lg border border-[var(--color-slate)] text-sm outline-none w-64"
-              />
-            </form>
-          )}
+
+      {!isAdmin && (
+        <div className="flex items-center gap-4">
+          <div className="relative w-64">
+            {!isOnSearchPage && (
+              <form onSubmit={handleSearchSubmit}>
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-slate)]"
+                />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search anything..."
+                  className="pl-9 pr-4 py-2 rounded-lg border border-[var(--color-slate)] text-sm outline-none w-64"
+                />
+              </form>
+            )}
+          </div>
+          <EcoScoreChip />
         </div>
-        <span className="text-xs bg-[var(--color-eco)]/10 text-[var(--color-eco)] px-3 py-1 rounded-full font-medium">
-          Eco Score: {ecoScore ?? "—"}
-        </span>
-      </div>
+      )}
+
       <div className="flex items-center gap-7">
-        <NotificationBell />
+                <NotificationBell />
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 rounded-lg border border-red-400 px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-900 cursor-pointer"

@@ -1,27 +1,26 @@
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({
-  children,
-  adminOnly = false,
-  allowedRoles,
-}) {
+export default function ProtectedRoute({ children, allowedRoles }) {
   const token = localStorage.getItem("token");
-  let user = null;
 
+  let user = null;
   try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
+    user = JSON.parse(localStorage.getItem("user"));
   } catch {
     user = null;
   }
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token || !user) return <Navigate to="/login" replace />;
 
-  const roles = allowedRoles ?? (adminOnly ? ["admin"] : null);
+  const role = user.role || "user";
 
-  if (roles && !roles.includes(user?.role)) {
-    return <Navigate to="/user-dashboard" replace />;
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return (
+      <Navigate
+        to={role === "admin" ? "/admin/users" : "/user-dashboard"}
+        replace
+      />
+    );
   }
 
   return children;

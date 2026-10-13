@@ -16,7 +16,7 @@ const recommendationRoutes = require("./routes/recommendationRoutes");
 const gamificationRoutes = require("./routes/gamificationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+const adminChallengeRoutes = require("./routes/adminChallengeRoutes");
 connectDB();
 
 console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
@@ -30,6 +30,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
 app.use("/api/admin/users", adminRoutes);
+app.use("/api/admin/challenges", adminChallengeRoutes);
 app.use("/api/carbon", carbonRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
