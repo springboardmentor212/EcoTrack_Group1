@@ -10,9 +10,37 @@ const handle = (fn) => async (req, res) => {
   try {
     await fn(req, res);
   } catch (err) {
+    if (err.name === "ValidationError") {
+      const first = Object.values(err.errors || {})[0];
+      return fail(res, 400, first?.message || "Invalid challenge data.");
+    }
     console.error(err);
     fail(res, 500, "Something went wrong. Please try again.");
   }
+};
+
+const CATEGORIES = ["transportation", "energy", "food", "waste", "water"];
+
+const validateBody = (body) => {
+  const { title, description, category, startDate, endDate, targetMetric } =
+    body || {};
+  if (!title?.trim() || !description?.trim()) {
+    return "Title and description are required.";
+  }
+  if (!CATEGORIES.includes(category)) return "Invalid category.";
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "Valid start and end dates are required.";
+  }
+  if (end <= start) return "End date must be after the start date.";
+
+  const cap = Number(targetMetric);
+  if (!Number.isFinite(cap) || cap < 0) {
+    return "Emission cap must be a number of 0 or more.";
+  }
+  return null;
 };
 
 const listChallenges = handle(async (req, res) => {
@@ -52,4 +80,54 @@ const listChallenges = handle(async (req, res) => {
   ok(res, { challenges: list, counts });
 });
 
-module.exports = { listChallenges };
+const createChallenge = handle(async (req, res) => {
+  const message = validateBody(req.body);
+  if (message) return fail(res, 400, message);
+
+  const { title, description, category, startDate, endDate, targetMetric } =
+    req.body;
+
+  const challenge = await Challenge.create({
+    title: title.trim(),
+    description: description.trim(),
+    category,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
+    targetMetric: Number(targetMetric),
+    createdBy: req.user.userId,
+  });
+
+  ok(
+    res,
+    { ...challenge.toObject(), status: computeStatus(challenge) },
+    "Challenge created.",
+    201,
+  );
+});
+
+const updateChallenge = handle(async (req, res) => {
+  const message = validateBody(req.body);
+  if (message) return fail(res, 400, message);
+
+  const challenge = await Challenge.findById(req.params.id);
+  if (!challenge) return fail(res, 404, "Challenge not found.");
+
+  const { title, description, category, startDate, endDate, targetMetric } =
+    req.body;
+
+  challenge.title = title.trim();
+  challenge.description = description.trim();
+  challenge.category = category;
+  challenge.startDate = new Date(startDate);
+  challenge.endDate = new Date(endDate);
+  challenge.targetMetric = Number(targetMetric);
+  await challenge.save();
+
+  ok(
+    res,
+    { ...challenge.toObject(), status: computeStatus(challenge) },
+    "Challenge updated.",
+  );
+});
+
+module.exports = { listChallenges, createChallenge, updateChallenge };

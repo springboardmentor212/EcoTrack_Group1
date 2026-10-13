@@ -18,3 +18,12 @@ export const updateUserRole = (id, role) =>
 // Suspend or reactivate a user
 export const updateUserStatus = (id, status) =>
   api.patch(`/admin/users/${id}/status`, { status });
+
+export const getAdminChallenges = (params = {}) =>
+  api.get("/admin/challenges", { params });
+
+export const createAdminChallenge = (data) =>
+  api.post("/admin/challenges", data);
+
+export const updateAdminChallenge = (id, data) =>
+  api.put(`/admin/challenges/${id}`, data);

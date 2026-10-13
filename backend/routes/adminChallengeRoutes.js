@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const authMiddleware = require("../middleware/authMiddleware");
 const { adminOnly } = require("../middleware/roleMiddleware");
 const c = require("../controllers/adminChallengeController");
@@ -25,6 +26,13 @@ const validQuery = (req, res, next) => {
   next();
 };
 
+const validId = (req, res, next) =>
+  mongoose.isValidObjectId(req.params.id)
+    ? next()
+    : res.status(400).json({ success: false, message: "Invalid id." });
+
 router.get("/", validQuery, c.listChallenges);
+router.post("/", c.createChallenge);
+router.put("/:id", validId, c.updateChallenge);
 
 module.exports = router;
