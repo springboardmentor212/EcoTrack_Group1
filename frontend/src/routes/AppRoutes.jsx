@@ -56,9 +56,18 @@ function AppRoutes() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/recommendations" element={<Recommendations />} />
-          <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["user", "admin"]}>
+              <Outlet />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
 
         <Route
