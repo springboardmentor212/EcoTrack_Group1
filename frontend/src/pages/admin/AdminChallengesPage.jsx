@@ -13,7 +13,7 @@ const FILTERS = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
   { label: "Upcoming", value: "upcoming" },
-  { label: "Ended", value: "completed" },
+  { label: "Completed", value: "completed" },
 ];
 
 const STATUS_STYLES = {
@@ -127,10 +127,10 @@ export default function AdminChallengesPage() {
             key={filter.value}
             type="button"
             onClick={() => setSelectedFilter(filter.value)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`text-sm px-4 py-1.5 rounded-full cursor-pointer ${
               selectedFilter === filter.value
-                ? "bg-[var(--color-eco)] text-white"
-                : "border border-gray-200 bg-white text-[var(--color-slate)]"
+                ? "bg-[var(--color-primary)] text-white"
+                : "bg-[var(--color-surface)] text-[var(--color-slate)]"
             }`}
           >
             {filter.label}
