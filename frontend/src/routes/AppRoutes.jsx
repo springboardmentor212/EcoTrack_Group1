@@ -32,7 +32,6 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Layout (sidebar + topbar) for any logged-in person */}
       <Route
         element={
           <ProtectedRoute>
@@ -40,7 +39,6 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* USER-ONLY PAGES */}
         <Route
           element={
             <ProtectedRoute allowedRoles={["user"]}>
@@ -63,7 +61,6 @@ function AppRoutes() {
           <Route path="/profile/edit" element={<EditProfile />} />
         </Route>
 
-        {/* ADMIN-ONLY PAGES */}
         <Route
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -77,7 +74,6 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Anything unknown goes back to login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

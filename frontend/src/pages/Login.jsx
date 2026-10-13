@@ -41,7 +41,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg-[var(--color-background)]">
-      {/* LEFT: Branding panel */}
+      
       <div className="hidden lg:flex lg:w-2/5 flex-col justify-center px-16 bg-[var(--color-primary)]">
         <div className="flex items-center gap-2 mb-8">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-eco)]">
@@ -59,10 +59,10 @@ export default function Login() {
         </p>
       </div>
 
-      {/* RIGHT: Login card */}
+      
       <div className="flex w-full lg:w-3/5 items-center justify-center px-4 py-16">
         <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-8 shadow-[0_10px_25px_-5px_var(--color-primary)]">
-          {/* mobile-only logo, since left panel is hidden on small screens */}
+          
           <div className="flex lg:hidden items-center gap-2 mb-6">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-eco)]">
               <Flower size={18} color="#FFFFFF" />

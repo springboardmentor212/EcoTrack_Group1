@@ -14,7 +14,6 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   const role = user.role || "user";
 
-  // Logged in, but in the wrong area: send them to their own home
   if (allowedRoles && !allowedRoles.includes(role)) {
     return (
       <Navigate
