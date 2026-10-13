@@ -19,7 +19,15 @@ export default function Topbar({ ecoScore, children }) {
   const [profileOpen, setProfileOpen] = useState(false);
 
   const isOnSearchPage = location.pathname === "/search";
-  const isAdmin = role === "admin";
+
+  // Normalize role to match Sidebar role handling.
+  const normalizedRole = String(role || "")
+    .trim()
+    .toLowerCase();
+
+  const isAdmin =
+    normalizedRole === "admin" ||
+    normalizedRole === "administrator";
 
   const handleLogout = () => {
     const confirmed = window.confirm(
@@ -35,18 +43,17 @@ export default function Topbar({ ecoScore, children }) {
   const handleSearchSubmit = (event) => {
     event.preventDefault();
 
-    if (!query.trim()) return;
+    const searchQuery = query.trim();
 
-    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    if (!searchQuery) return;
+
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     setQuery("");
   };
 
   const handleSwitchToUserView = () => {
     setProfileOpen(false);
-
-    // Navigate to the normal dashboard route.
-    // This does not remove the admin role or admin permissions.
-    navigate("/dashboard");
+    navigate("/user-dashboard");
   };
 
   return (

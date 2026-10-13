@@ -1,4 +1,4 @@
-const FILTERS = ["All", "Active", "Completed"];
+const FILTERS = ["All", "Active", "Upcoming", "Ended"];
 
 const ChallengeFilter = ({ selectedFilter, onFilterChange }) => {
 return ( <div className="mt-6 flex flex-wrap gap-3">

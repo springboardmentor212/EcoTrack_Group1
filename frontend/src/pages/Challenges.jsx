@@ -19,6 +19,20 @@ const getChallengeList = (response) => {
   return [];
 };
 
+const getChallengeId = (challenge) =>
+  challenge?._id || challenge?.id;
+
+const getChallengeStatus = (challenge) =>
+  String(challenge?.status || "").trim().toLowerCase();
+
+const getValidDate = (value) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const Challenges = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,9 +42,12 @@ const Challenges = () => {
   const [fetchError, setFetchError] = useState("");
 
   const { role, loading: userLoading } = useCurrentUser();
-  const isAdmin = String(role || "").toLowerCase() === "admin";
 
-  // Load challenges from the backend
+  const normalizedRole = String(role || "").trim().toLowerCase();
+  const isAdmin =
+    normalizedRole === "admin" ||
+    normalizedRole === "administrator";
+
   const fetchChallenges = async (showLoader = false) => {
     if (showLoader) {
       setLoadingChallenges(true);
@@ -40,22 +57,7 @@ const Challenges = () => {
 
     try {
       const response = await api.get("/challenges");
-      console.log("CHALLENGES API RESPONSE:", response.data);
-
-      const list = getChallengeList(response);
-      setChallenges(list);
-
-      if (
-        !Array.isArray(response.data) &&
-        !Array.isArray(response.data?.data) &&
-        !Array.isArray(response.data?.challenges) &&
-        !Array.isArray(response.data?.data?.challenges)
-      ) {
-        console.warn(
-          "Unexpected challenges response format:",
-          response.data
-        );
-      }
+      setChallenges(getChallengeList(response));
     } catch (error) {
       console.error("Failed to fetch challenges:", error);
 
@@ -75,14 +77,14 @@ const Challenges = () => {
       try {
         const response = await api.get("/challenges");
 
-        if (cancelled) return;
-
-        console.log("CHALLENGES API RESPONSE:", response.data);
-        setChallenges(getChallengeList(response));
-        setFetchError("");
+        if (!cancelled) {
+          setChallenges(getChallengeList(response));
+          setFetchError("");
+        }
       } catch (error) {
         if (!cancelled) {
           console.error("Failed to fetch challenges:", error);
+
           setFetchError(
             error.response?.data?.message ||
               "Unable to load challenges. Check the backend server and API URL."
@@ -102,25 +104,55 @@ const Challenges = () => {
     };
   }, []);
 
-  const getChallengeId = (challenge) =>
-    challenge._id || challenge.id;
+  // Task 43: Filter challenges by status and dates.
+  const filteredChallenges = challenges.filter((challenge) => {
+    if (selectedFilter === "All") {
+      return true;
+    }
 
-  const filteredChallenges =
-    selectedFilter === "All"
-      ? challenges
-      : challenges.filter(
-          (challenge) =>
-            String(challenge.status || "").toLowerCase() ===
-            selectedFilter.toLowerCase()
+    const status = getChallengeStatus(challenge);
+    const startDate = getValidDate(challenge.startDate);
+    const endDate = getValidDate(challenge.endDate);
+    const now = new Date();
+
+    switch (selectedFilter) {
+      case "Active":
+        return (
+          status === "active" &&
+          (!startDate || startDate <= now) &&
+          (!endDate || endDate >= now)
         );
 
-  // Create or edit
+      case "Upcoming":
+        return (
+          status === "upcoming" ||
+          (startDate > now &&
+            status !== "ended" &&
+            status !== "completed" &&
+            status !== "cancelled")
+        );
+
+      case "Ended":
+        return (
+          status === "ended" ||
+          status === "completed" ||
+          status === "cancelled" ||
+          (endDate && endDate < now)
+        );
+
+      default:
+        return true;
+    }
+  });
+
+  // Create or edit a challenge.
   const handleSaveChallenge = async (challengeData) => {
     if (!isAdmin) return;
 
     try {
       if (editingChallenge) {
         const id = getChallengeId(editingChallenge);
+
         await api.put(`/challenges/${id}`, challengeData);
         alert("Challenge updated successfully!");
       } else {
@@ -133,6 +165,7 @@ const Challenges = () => {
       setIsModalOpen(false);
     } catch (error) {
       console.error("Failed to save challenge:", error);
+
       alert(
         error.response?.data?.message ||
           "Unable to save challenge. Check the backend endpoint."
@@ -140,7 +173,7 @@ const Challenges = () => {
     }
   };
 
-  // Edit
+  // Edit a challenge.
   const handleEdit = (challenge) => {
     if (!isAdmin) return;
 
@@ -148,7 +181,7 @@ const Challenges = () => {
     setIsModalOpen(true);
   };
 
-  // End early
+  // End a challenge early.
   const handleEndEarly = async (challenge) => {
     if (!isAdmin) return;
 
@@ -162,12 +195,14 @@ const Challenges = () => {
 
     try {
       const id = getChallengeId(challenge);
-      await api.patch(`/challenges/${id}/end`);
 
+      await api.patch(`/challenges/${id}/end`);
       await fetchChallenges();
+
       alert("Challenge ended successfully!");
     } catch (error) {
       console.error("Failed to end challenge:", error);
+
       alert(
         error.response?.data?.message ||
           "Unable to end challenge. Check the backend endpoint."
@@ -175,7 +210,7 @@ const Challenges = () => {
     }
   };
 
-  // Delete
+  // Delete a challenge.
   const handleDelete = async (challenge) => {
     if (!isAdmin) return;
 
@@ -189,12 +224,14 @@ const Challenges = () => {
 
     try {
       const id = getChallengeId(challenge);
-      await api.delete(`/challenges/${id}`);
 
+      await api.delete(`/challenges/${id}`);
       await fetchChallenges();
+
       alert("Challenge deleted successfully!");
     } catch (error) {
       console.error("Failed to delete challenge:", error);
+
       alert(
         error.response?.data?.message ||
           "Unable to delete challenge. Check the backend endpoint."
@@ -217,6 +254,7 @@ const Challenges = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Challenges
           </h1>
+
           <p className="mt-1 text-sm text-gray-600">
             Track your progress and build sustainable habits.
           </p>
@@ -244,6 +282,7 @@ const Challenges = () => {
       {fetchError ? (
         <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="text-red-700">{fetchError}</p>
+
           <button
             type="button"
             onClick={() => fetchChallenges(true)}
@@ -257,6 +296,7 @@ const Challenges = () => {
           <p className="text-gray-600">
             No challenges found.
           </p>
+
           {isAdmin && (
             <p className="mt-2 text-sm text-gray-500">
               Click Create Challenge to add one.
@@ -275,13 +315,10 @@ const Challenges = () => {
               challenge.startDate &&
               challenge.endDate
             ) {
-              const start = new Date(challenge.startDate);
-              const end = new Date(challenge.endDate);
+              const start = getValidDate(challenge.startDate);
+              const end = getValidDate(challenge.endDate);
 
-              if (
-                !Number.isNaN(start.getTime()) &&
-                !Number.isNaN(end.getTime())
-              ) {
+              if (start && end) {
                 duration = `${Math.max(
                   1,
                   Math.ceil(

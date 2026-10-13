@@ -45,7 +45,7 @@ function AppRoutes() {
         <Route path="/challenge-detail" element={<ChallengeDetail />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/search" element={<SearchResults />} />
-        <Route path="/reports" element={<Reports />} />
+        <Route path="/admin/reports" element={<Reports />} />
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<UserProfile />} />
