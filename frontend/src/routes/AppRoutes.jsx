@@ -32,6 +32,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
+      {/* Layout (sidebar + topbar) for any logged-in person */}
       <Route
         element={
           <ProtectedRoute>
@@ -39,20 +40,30 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/carbon-tracker" element={<CarbonTracker />} />
-        <Route path="/carbon-tracker/:id" element={<EntryDetail />} />
-        <Route path="/goals" element={<Goals />} />
-        <Route path="/goals/:id" element={<GoalDetail />} />
-        <Route path="/challenges" element={<Challenges />} />
-        <Route path="/challenges/:id" element={<ChallengeDetail />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/search" element={<SearchResults />} />
-        <Route path="/recommendations" element={<Recommendations />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/profile/edit" element={<EditProfile />} />
+        {/* USER-ONLY PAGES */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <Outlet />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/user-dashboard" element={<UserDashboard />} />
+          <Route path="/carbon-tracker" element={<CarbonTracker />} />
+          <Route path="/carbon-tracker/:id" element={<EntryDetail />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/goals/:id" element={<GoalDetail />} />
+          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/challenges/:id" element={<ChallengeDetail />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route path="/recommendations" element={<Recommendations />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+        </Route>
 
+        {/* ADMIN-ONLY PAGES */}
         <Route
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -61,13 +72,13 @@ function AppRoutes() {
           }
         >
           <Route path="/admin/users" element={<AdminUsersPage />} />
-          <Route
-            path="/admin/challenges"
-            element={<AdminChallengesPage />}
-          />
+          <Route path="/admin/challenges" element={<AdminChallengesPage />} />
           <Route path="/admin/reports" element={<AdminReportsPage />} />
         </Route>
       </Route>
+
+      {/* Anything unknown goes back to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

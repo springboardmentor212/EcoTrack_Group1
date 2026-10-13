@@ -8,11 +8,13 @@ import {
   Search,
   Sparkles,
   User,
+  Users,
+  FileText,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import useCurrentUser from "../hooks/useCurrentUser";
 
-const NAV_ITEMS = [
+const USER_NAV = [
   { to: "/user-dashboard", icon: Home, label: "Dashboard" },
   { to: "/carbon-tracker", icon: Zap, label: "Carbon Tracker" },
   { to: "/goals", icon: Target, label: "Goals" },
@@ -23,10 +25,25 @@ const NAV_ITEMS = [
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
+const ADMIN_NAV = [
+  { to: "/admin/users", icon: Users, label: "Users" },
+  { to: "/admin/challenges", icon: Trophy, label: "Challenges" },
+  { to: "/admin/reports", icon: FileText, label: "Reports" },
+];
+
+const getStoredRole = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user"))?.role || "user";
+  } catch {
+    return "user";
+  }
+};
+
 export default function Sidebar() {
   const location = useLocation();
-  const { profile, name, initial, email, loading } = useCurrentUser();
-  const isAdmin = profile?.role === "admin";
+  const { name, initial, email, loading } = useCurrentUser();
+  const isAdmin = getStoredRole() === "admin";
+  const navItems = isAdmin ? ADMIN_NAV : USER_NAV;
 
   return (
     <aside className="flex h-screen w-64 flex-shrink-0 flex-col bg-[var(--color-primary)]">
@@ -35,13 +52,11 @@ export default function Sidebar() {
           <Flower size={18} color="#FFFFFF" />
         </div>
 
-        <span className="text-lg font-bold text-white">
-          EcoTrack
-        </span>
+        <span className="text-lg font-bold text-white">EcoTrack</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             location.pathname === item.to ||
             location.pathname.startsWith(item.to + "/");
@@ -61,38 +76,6 @@ export default function Sidebar() {
             </Link>
           );
         })}
-
-        {isAdmin && (
-          <>
-            <p className="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-wider text-white/50">
-              Admin
-            </p>
-
-            {[
-              { to: "/admin/users", label: "Users" },
-              { to: "/admin/challenges", label: "Challenges" },
-              { to: "/admin/reports", label: "Reports" },
-            ].map((item) => {
-              const isActive =
-                location.pathname === item.to ||
-                location.pathname.startsWith(item.to + "/");
-
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-                    isActive
-                      ? "bg-[var(--color-secondary)] font-medium"
-                      : "text-white/70 hover:bg-white/5"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </>
-        )}
       </nav>
 
       <div className="flex items-center gap-3 border-t border-white/10 p-4">
@@ -108,7 +91,6 @@ export default function Sidebar() {
             {loading ? "" : email}
           </p>
         </div>
-
       </div>
     </aside>
   );
