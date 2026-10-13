@@ -154,9 +154,10 @@ export default function AdminUsers() {
       const detail = response.data.data;
 
       setSelectedUser({
+        ...user,
         ...detail,
-        id: detail._id || detail.id,
-        status: detail.status || "active",
+        id: detail._id || detail.id || user.id,
+        status: detail.status || user.status || "active",
       });
     } catch (err) {
       toast.error(

@@ -76,7 +76,9 @@ export default function UserManagementTable({
                   </td>
 
                   <td className="px-4 py-4 text-sm text-[var(--color-slate)]">
-                    {user.ecoScore ?? user.eco_score ?? "—"}
+                    {user.role === "admin"
+                      ? "—"
+                      : (user.ecoScore ?? user.eco_score ?? "—")}
                   </td>
 
                   <td className="px-4 py-4 text-sm text-[var(--color-slate)]">
