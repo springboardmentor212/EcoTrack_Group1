@@ -1,225 +1,123 @@
-const CarbonEntry = require("../models/CarbonEntry");
-const Goal = require("../models/Goal");
-const GoalProgress = require("../models/GoalProgress");
-const UserChallenge = require("../models/UserChallenge");
+const fs = require("fs");
+const path = require("path");
+const agg = require("../utils/reportAggregations");
+const { generatePdf } = require("./pdfGenerator");
+const { generateExcel } = require("./excelGenerator");
 
-async function getReportData(startDate, endDate, userId = null) {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+const REPORTS_DIR = path.join(__dirname, "..", "uploads", "reports");
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+const statusLabel = (s) => (s === "completed" ? "Ended" : cap(s));
 
-  const carbonMatch = {
-    isDeleted: false,
-    date: {
-      $gte: start,
-      $lte: end,
-    },
-  };
+const SECTION_DEFS = {
+  emissions: {
+    title: "Emissions by category",
+    columns: [
+      { header: "Category", key: "category" },
+      { header: "Entries", key: "entries" },
+      { header: "Total (kg CO2e)", key: "totalKg" },
+      { header: "Share (%)", key: "share" },
+    ],
+    load: async (from, to) =>
+      (await agg.emissionsByCategory(from, to)).map((r) => ({
+        ...r,
+        category: cap(r.category),
+      })),
+  },
+  goals: {
+    title: "Goal results",
+    columns: [
+      { header: "Category", key: "category" },
+      { header: "Goals", key: "goals" },
+      { header: "Completed", key: "completed" },
+      { header: "Within cap", key: "withinCap" },
+      { header: "Exceeded", key: "exceeded" },
+      { header: "Success rate (%)", key: "successRate" },
+    ],
+    load: async (from, to) =>
+      (await agg.goalResults(from, to)).map((r) => ({
+        ...r,
+        category: cap(r.category),
+      })),
+  },
+  challenges: {
+    title: "Challenge participation",
+    columns: [
+      { header: "Challenge", key: "title" },
+      { header: "Category", key: "category" },
+      { header: "Status", key: "status" },
+      { header: "Members", key: "members" },
+      { header: "Avg progress (%)", key: "avgProgress" },
+      { header: "Points", key: "points" },
+    ],
+    load: async (from, to) =>
+      (await agg.challengeParticipation(from, to)).map((r) => ({
+        ...r,
+        category: cap(r.category),
+        status: statusLabel(r.status),
+      })),
+  },
+  users: {
+    title: "Per user breakdown",
+    columns: [
+      { header: "Name", key: "name" },
+      { header: "Email", key: "email" },
+      { header: "Entries", key: "entries" },
+      { header: "Total (kg)", key: "totalKg" },
+      ...agg.CATEGORIES.map((c) => ({ header: `${cap(c)} (kg)`, key: c })),
+    ],
+    load: (from, to) => agg.perUserBreakdown(from, to),
+  },
+};
+const INCLUDE_KEYS = Object.keys(SECTION_DEFS);
 
-  if (userId) {
-    carbonMatch.userId = userId;
+const fmt = (d) =>
+  new Date(d).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+async function createReportFile({ from, to, format, includes, generatedBy }) {
+  fs.mkdirSync(REPORTS_DIR, { recursive: true });
+
+  const sections = [];
+  for (const key of includes) {
+    const def = SECTION_DEFS[key];
+    sections.push({
+      key,
+      title: def.title,
+      columns: def.columns,
+      rows: await def.load(from, to),
+    });
   }
 
-  const emissionsByCategory = await CarbonEntry.aggregate([
-    {
-      $match: carbonMatch,
-    },
-    {
-      $group: {
-        _id: "$category",
-        totalEmissions: {
-          $sum: "$calculatedCO2",
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        category: "$_id",
-        totalEmissions: 1,
-      },
-    },
-    {
-      $sort: {
-        category: 1,
-      },
-    },
-  ]);
+  const ext = format === "pdf" ? "pdf" : "xlsx";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const fileName = `ecotrack-report-${stamp}.${ext}`;
+  const absPath = path.join(REPORTS_DIR, fileName);
 
-  const goalMatch = {
-    createdAt: {
-      $lte: end,
-    },
+  const meta = {
+    fromLabel: fmt(from),
+    toLabel: fmt(to),
+    generatedLabel: fmt(new Date()),
+    generatedBy,
   };
-
-  if (userId) {
-    goalMatch.userId = userId;
-  }
-
-  const goalResults = await Goal.aggregate([
-    {
-      $match: goalMatch,
-    },
-    {
-      $group: {
-        _id: "$status",
-        count: {
-          $sum: 1,
-        },
-        target: {
-          $sum: "$target",
-        },
-        currentValue: {
-          $sum: "$currentValue",
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        status: "$_id",
-        count: 1,
-        target: 1,
-        currentValue: 1,
-      },
-    },
-  ]);
-
-  const progressMatch = {
-    date: {
-      $gte: start,
-      $lte: end,
-    },
-  };
-
-  if (userId) {
-    progressMatch.userId = userId;
-  }
-
-  const goalProgress = await GoalProgress.aggregate([
-    {
-      $match: progressMatch,
-    },
-    {
-      $group: {
-        _id: "$goalId",
-        totalProgress: {
-          $sum: "$progress",
-        },
-        averageProgress: {
-          $avg: "$progress",
-        },
-        entries: {
-          $sum: 1,
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        goalId: "$_id",
-        totalProgress: 1,
-        averageProgress: 1,
-        entries: 1,
-      },
-    },
-  ]);
-
-  const challengeMatch = {
-    joinedAt: {
-      $gte: start,
-      $lte: end,
-    },
-  };
-
-  if (userId) {
-    challengeMatch.userId = userId;
-  }
-
-  const challengeParticipation = await UserChallenge.aggregate([
-    {
-      $match: challengeMatch,
-    },
-    {
-      $group: {
-        _id: "$status",
-        members: {
-          $sum: 1,
-        },
-        averageProgress: {
-          $avg: "$currentProgress",
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        status: "$_id",
-        members: 1,
-        averageProgress: {
-          $round: [
-            "$averageProgress",
-            2,
-          ],
-        },
-      },
-    },
-  ]);
-
-  const perUserBreakdown = await CarbonEntry.aggregate([
-    {
-      $match: carbonMatch,
-    },
-    {
-      $group: {
-        _id: "$userId",
-        totalEmissions: {
-          $sum: "$calculatedCO2",
-        },
-      },
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "_id",
-        foreignField: "_id",
-        as: "user",
-      },
-    },
-    {
-      $unwind: {
-        path: "$user",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        userId: "$_id",
-        name: "$user.name",
-        email: "$user.email",
-        totalEmissions: 1,
-      },
-    },
-    {
-      $sort: {
-        totalEmissions: -1,
-      },
-    },
-  ]);
+  if (format === "pdf") await generatePdf(sections, meta, absPath);
+  else await generateExcel(sections, meta, absPath);
 
   return {
-    dateRange: {
-      from: start,
-      to: end,
-    },
-    emissionsByCategory,
-    goalResults,
-    goalProgress,
-    challengeParticipation,
-    perUserBreakdown,
+    fileName,
+    filePath: path.posix.join("uploads", "reports", fileName),
+    absPath,
   };
 }
 
+const resolveReportPath = (fileName) =>
+  path.join(REPORTS_DIR, path.basename(fileName));
+
 module.exports = {
-  getReportData,
+  createReportFile,
+  resolveReportPath,
+  INCLUDE_KEYS,
+  REPORTS_DIR,
 };

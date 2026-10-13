@@ -1,3 +1,4 @@
+import { api } from "../services/ecoApi";
 import NotificationList from "../components/NotificationList";
 
 function Notifications() {

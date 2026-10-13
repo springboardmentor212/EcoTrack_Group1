@@ -1,41 +1,51 @@
-const ParticipantList = () => {
-    const participants = [
-        { name: "Arun", progress: 90 },
-        { name: "Priya", progress: 80 },
-        { name: "Varsha", progress: 60 },
-        { name: "Kavin", progress: 45 }
-    ];
+const ParticipantList = ({ participants = [], target = 0, currentUserId }) => {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-semibold text-[var(--color-slate)]">
+        Participants
+      </h2>
+      <p className="mt-1 text-xs text-[var(--color-muted)]">
+        Ranked by lowest emissions
+      </p>
 
-    return (
-        <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold text-[var(--color-slate)]">
-                Participants
-            </h2>
+      {participants.length === 0 ? (
+        <p className="mt-4 text-sm text-[var(--color-muted)]">
+          No one has joined yet.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {participants.map((p) => {
+            const percent =
+              target > 0 ? Math.round((p.currentProgress / target) * 100) : 0;
+            const isMe = String(p.userId) === String(currentUserId);
 
-            <div className="mt-4 space-y-3">
-                {participants.map((participant, index) => (
-                    <div
-                        key={index}
-                        className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3"
-                    >
-                        <div>
-                            <p className="font-medium text-[var(--color-slate)]">
-                                {participant.name}
-                            </p>
+            return (
+              <div
+                key={p.userId}
+                className={`flex items-center justify-between rounded-lg px-4 py-3 ${
+                  isMe ? "bg-[var(--color-eco)]/10" : "bg-gray-50"
+                }`}
+              >
+                <div>
+                  <p className="font-medium text-[var(--color-slate)]">
+                    {p.name}
+                    {isMe && " (You)"}
+                  </p>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    {p.currentProgress} kg CO₂ · {percent}% of cap
+                  </p>
+                </div>
 
-                            <p className="text-xs text-[var(--color-muted)]">
-                                Progress: {participant.progress}%
-                            </p>
-                        </div>
-
-                        <span className="text-sm font-semibold text-[var(--color-eco)]">
-                            #{index + 1}
-                        </span>
-                    </div>
-                ))}
-            </div>
+                <span className="text-sm font-semibold text-[var(--color-eco)]">
+                  #{p.rank}
+                </span>
+              </div>
+            );
+          })}
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default ParticipantList;

@@ -73,7 +73,8 @@ async function getAllCategoryEmissionsInRange(
   );
 
   rows.forEach((row) => {
-    totals[row._id] = row.total;
+    const key = String(row._id).toLowerCase();
+    totals[key] = (totals[key] || 0) + row.total;
   });
 
   return totals;

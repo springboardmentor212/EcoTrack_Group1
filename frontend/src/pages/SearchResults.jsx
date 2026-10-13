@@ -7,7 +7,7 @@ const filterTypes = [
   { label: "All Types", value: "All Types" },
   { label: "Goals", value: "Goals" },
   { label: "Entries", value: "Entries" },
-  { label: "Challenges", value: "Challenges", disabled: true },
+  { label: "Challenges", value: "Challenges" },
 ];
 const sectors = ["Transportation", "Energy", "Food & Diet", "Waste", "Water"];
 

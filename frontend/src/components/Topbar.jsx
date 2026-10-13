@@ -3,11 +3,19 @@ import { Search, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useCurrentUser from "../hooks/useCurrentUser";
 import NotificationBell from "./NotificationBell";
+import useSustainabilityScore from "../hooks/useSustainabilityScore";
 
-export default function Topbar({ ecoScore, children }) {
+export default function Topbar({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { name, loading } = useCurrentUser();
+  const ecoScore = useSustainabilityScore();
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
   const [query, setQuery] = useState("");
 
   const isOnSearchPage = location.pathname === "/search";
@@ -35,7 +43,7 @@ export default function Topbar({ ecoScore, children }) {
             Welcome Back{loading ? "" : name ? `, ${name}` : ""}
           </h1>
           <p className="text-sm text-[var(--color-slate)] mt-1">
-            Today is Thursday, Oct 24 - Let's hit your green targets today!
+            Today is {today} - Let's hit your green targets today!
           </p>
         </div>
       </div>
@@ -58,7 +66,7 @@ export default function Topbar({ ecoScore, children }) {
           )}
         </div>
         <span className="text-xs bg-[var(--color-eco)]/10 text-[var(--color-eco)] px-3 py-1 rounded-full font-medium">
-          Eco Score: {ecoScore}
+          Eco Score: {ecoScore ?? "—"}
         </span>
       </div>
       <div className="flex items-center gap-7">

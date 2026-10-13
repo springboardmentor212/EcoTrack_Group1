@@ -1,15 +1,16 @@
-const GamificationProfile = require('../models/GamificationProfile');
-// const Badge = require('../models/Badge');
-// const Goal = require('../models/Goal');
-const { getCategoryEmissionsInRange } = require('../utils/aggregations');
+const GamificationProfile = require("../models/GamificationProfile");
+const Badge = require("../models/Badge");
+const Goal = require("../models/Goal");
+const { getCategoryEmissionsInRange } = require("../utils/aggregations");
+const { createNotification } = require("./notificationService");
 
-const CATEGORIES = ['transportation', 'energy', 'food', 'waste', 'water'];
+const CATEGORIES = ["transportation", "energy", "food", "waste", "water"];
 
 const LEVEL_THRESHOLDS = [
-  { min: 90, level: 'Super Champion' },
-  { min: 70, level: 'Green Advocate' },
-  { min: 40, level: 'Eco Warrior' },
-  { min: 0, level: 'Eco Beginner' },
+  { min: 90, level: "Super Champion" },
+  { min: 70, level: "Green Advocate" },
+  { min: 40, level: "Eco Warrior" },
+  { min: 0, level: "Eco Beginner" },
 ];
 
 function levelForScore(score) {
@@ -24,11 +25,21 @@ async function getOrCreateProfile(userId) {
   return profile;
 }
 
-async function evaluateCategoryPeriod(userId, category, periodStart, periodEnd) {
-  const goal = await Goal.findOne({ userId, category, status: 'active' });
-  if (!goal) return null; 
+async function evaluateCategoryPeriod(
+  userId,
+  category,
+  periodStart,
+  periodEnd,
+) {
+  const goal = await Goal.findOne({ userId, category, status: "active" });
+  if (!goal) return null;
 
-  const usage = await getCategoryEmissionsInRange(userId, category, periodStart, periodEnd);
+  const usage = await getCategoryEmissionsInRange(
+    userId,
+    category,
+    periodStart,
+    periodEnd,
+  );
   const stayedUnderCap = usage <= goal.target;
 
   const profile = await getOrCreateProfile(userId);
@@ -36,12 +47,29 @@ async function evaluateCategoryPeriod(userId, category, periodStart, periodEnd) 
   if (stayedUnderCap) {
     profile.ecoScore += 5;
     profile.rewardPoints += 10;
-    profile.categoryCapStreaks[category] = (profile.categoryCapStreaks[category] || 0) + 1;
+    profile.categoryCapStreaks[category] =
+      (profile.categoryCapStreaks[category] || 0) + 1;
   } else {
     profile.categoryCapStreaks[category] = 0;
   }
 
-  profile.level = levelForScore(profile.ecoScore);
+  const oldLevel = profile.level;
+  const newLevel = levelForScore(profile.ecoScore);
+  profile.level = newLevel;
+
+  if (oldLevel && oldLevel !== newLevel) {
+    try {
+      await createNotification({
+        userId,
+        title: "Eco Level Up! 🌟",
+        message: `You reached the "${newLevel}" level!`,
+        type: "gamification",
+      });
+    } catch (e) {
+      console.error("level notification failed:", e.message);
+    }
+  }
+
   await profile.save();
 
   await evaluateBadges(userId, profile);
@@ -51,7 +79,9 @@ async function evaluateCategoryPeriod(userId, category, periodStart, periodEnd) 
 
 async function evaluateBadges(userId, profile) {
   const allBadges = await Badge.find();
-  const earnedIds = new Set(profile.earnedBadges.map((b) => b.badge.toString()));
+  const earnedIds = new Set(
+    profile.earnedBadges.map((b) => b.badge.toString()),
+  );
   const newlyEarned = [];
 
   for (const badge of allBadges) {
@@ -60,6 +90,17 @@ async function evaluateBadges(userId, profile) {
     if (criteriaMet(badge.criteriaKey, profile)) {
       profile.earnedBadges.push({ badge: badge._id, earnedAt: new Date() });
       newlyEarned.push(badge);
+
+      try {
+        await createNotification({
+          userId,
+          title: "New Badge Unlocked! 🏆",
+          message: `Congratulations! You unlocked the "${badge.name}" badge.`,
+          type: "gamification",
+        });
+      } catch (e) {
+        console.error("badge notification failed:", e.message);
+      }
     }
   }
 
