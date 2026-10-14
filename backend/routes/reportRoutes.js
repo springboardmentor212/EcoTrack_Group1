@@ -15,5 +15,6 @@ const validId = (req, res, next) =>
 router.post("/export", c.exportReport);
 router.get("/history", c.getHistory);
 router.get("/:id/download", validId, c.downloadReport);
+router.get("/preview", c.getPreview);
 
 module.exports = router;
