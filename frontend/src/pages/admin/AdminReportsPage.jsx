@@ -9,7 +9,6 @@ const sections = [
   { key: "users", label: "Per-user breakdown" },
 ];
 
-// Colours / labels for the preview charts (keys match backend categories)
 const CATEGORY_STYLE = {
   energy: { label: "Energy", short: "Energy", color: "#f59e0b" },
   transportation: {
@@ -49,7 +48,6 @@ const periodLabel = (from, to) => {
 
 const reportFormat = (format) => (format === "pdf" ? "PDF" : "Excel");
 
-// yyyy-mm-dd in LOCAL time (for <input type="date">)
 const toInputDate = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -138,7 +136,6 @@ function EmissionPie({ rows }) {
     );
   }
 
-  // biggest category first
   const sorted = [...rows].sort((a, b) => b.totalKg - a.totalKg);
 
   let start = 0;
@@ -178,10 +175,9 @@ function EmissionPie({ rows }) {
 }
 
 function GoalBars({ rows }) {
-  const max = Math.max(...rows.flatMap((g) => [g.withinCap, g.exceeded]), 0);
-  const chartHeight = 100;
+  const total = rows.reduce((sum, g) => sum + g.goals, 0);
 
-  if (!max) {
+  if (!total) {
     return (
       <p className="py-10 text-sm text-slate-500">
         No goals found in this date range.
@@ -191,33 +187,38 @@ function GoalBars({ rows }) {
 
   return (
     <div>
-      <div
-        className="flex items-end gap-6"
-        style={{ height: chartHeight + 24 }}
-      >
+      <ul className="space-y-3">
         {rows.map((item) => (
-          <div key={item.category} className="flex flex-col items-center gap-2">
-            <div
-              className="flex items-end gap-1"
-              style={{ height: chartHeight }}
-            >
-              <div
-                className="w-3.5 rounded-t-sm bg-emerald-500"
-                style={{ height: (item.withinCap / max) * chartHeight }}
-                title={`${styleFor(item.category).label}: ${item.withinCap} within cap`}
-              />
-              <div
-                className="w-3.5 rounded-t-sm bg-red-500"
-                style={{ height: (item.exceeded / max) * chartHeight }}
-                title={`${styleFor(item.category).label}: ${item.exceeded} exceeded`}
-              />
-            </div>
-            <span className="text-[11px] text-slate-500">
+          <li key={item.category} className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-xs text-slate-600">
               {styleFor(item.category).short}
             </span>
-          </div>
+
+            {item.goals === 0 ? (
+              <span className="text-xs text-slate-400">No goals</span>
+            ) : (
+              <>
+                <div
+                  className="flex h-3.5 flex-1 overflow-hidden rounded-full bg-slate-100"
+                  title={`${item.withinCap} within cap, ${item.exceeded} exceeded`}
+                >
+                  <div
+                    className="bg-emerald-500"
+                    style={{ width: `${(item.withinCap / item.goals) * 100}%` }}
+                  />
+                  <div
+                    className="bg-red-500"
+                    style={{ width: `${(item.exceeded / item.goals) * 100}%` }}
+                  />
+                </div>
+                <span className="w-28 shrink-0 text-right text-xs text-slate-600">
+                  {item.withinCap}/{item.goals} within cap
+                </span>
+              </>
+            )}
+          </li>
         ))}
-      </div>
+      </ul>
 
       <div className="mt-4 flex items-center gap-4 text-xs text-slate-700">
         <span className="flex items-center gap-1.5">
@@ -234,8 +235,11 @@ function GoalBars({ rows }) {
 }
 
 export default function AdminReportsPage() {
-  const [from, setFrom] = useState("2026-04-01");
-  const [to, setTo] = useState("2026-09-30");
+  const [from, setFrom] = useState(() => {
+    const now = new Date();
+    return toInputDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [to, setTo] = useState(() => toInputDate(new Date()));
   const [format, setFormat] = useState("pdf");
   const [include, setInclude] = useState({
     emissions: true,
@@ -278,7 +282,6 @@ export default function AdminReportsPage() {
     loadHistory();
   }, [loadHistory]);
 
-  // Load real chart data whenever the date range changes
   useEffect(() => {
     if (!from || !to || from > to) return undefined;
 
