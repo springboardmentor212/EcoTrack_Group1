@@ -1,12 +1,15 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import ChallengeFormModal from "../../components/ChallengeFormModal";
-import { capitalize } from "../../utils/challengeUtils";
+import AdminChallengeCard from "../../components/AdminChallengeCard";
 import {
   getAdminChallenges,
   createAdminChallenge,
   updateAdminChallenge,
+  endAdminChallenge,
+  deleteAdminChallenge,
 } from "../../services/adminService";
 
 const FILTERS = [
@@ -16,21 +19,6 @@ const FILTERS = [
   { label: "Completed", value: "completed" },
 ];
 
-const STATUS_STYLES = {
-  active: "bg-green-100 text-green-700",
-  upcoming: "bg-blue-100 text-blue-700",
-  completed: "bg-gray-100 text-gray-600",
-};
-
-const STATUS_LABELS = {
-  active: "Active",
-  upcoming: "Upcoming",
-  completed: "Ended",
-};
-
-const durationDays = (start, end) =>
-  Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
-
 export default function AdminChallengesPage() {
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +26,12 @@ export default function AdminChallengesPage() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [actionInProgress, setActionInProgress] = useState(false);
 
   const loadChallenges = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const response = await getAdminChallenges();
       setChallenges(response.data.data.challenges || []);
@@ -63,7 +53,9 @@ export default function AdminChallengesPage() {
     () =>
       selectedFilter === "all"
         ? challenges
-        : challenges.filter((c) => c.status === selectedFilter),
+        : challenges.filter(
+            (challenge) => challenge.status === selectedFilter,
+          ),
     [challenges, selectedFilter],
   );
 
@@ -89,15 +81,60 @@ export default function AdminChallengesPage() {
       } else {
         await createAdminChallenge(payload);
       }
-    } catch (err) {
-      throw new Error(
-        err.response?.data?.message || "Could not save the challenge.",
-      );
-    }
 
-    toast.success(editing ? "Challenge updated." : "Challenge created.");
-    closeForm();
-    await loadChallenges();
+      toast.success(editing ? "Challenge updated." : "Challenge created.");
+      closeForm();
+      await loadChallenges();
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Could not save the challenge.";
+      toast.error(message);
+      throw new Error(message);
+    }
+  };
+
+  const handleEnd = async (challenge) => {
+    const confirmed = window.confirm(
+      `End "${challenge.title}" now? Participants will no longer be able to treat it as active.`,
+    );
+
+    if (!confirmed) return;
+
+    setActionInProgress(true);
+
+    try {
+      await endAdminChallenge(challenge._id);
+      toast.success("Challenge ended successfully.");
+      await loadChallenges();
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Could not end the challenge.",
+      );
+    } finally {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleDelete = async (challenge) => {
+    const confirmed = window.confirm(
+      `Delete "${challenge.title}" permanently? This action cannot be undone.`,
+    );
+
+    if (!confirmed) return;
+
+    setActionInProgress(true);
+
+    try {
+      await deleteAdminChallenge(challenge._id);
+      toast.success("Challenge deleted successfully.");
+      await loadChallenges();
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Could not delete the challenge.",
+      );
+    } finally {
+      setActionInProgress(false);
+    }
   };
 
   return (
@@ -115,7 +152,8 @@ export default function AdminChallengesPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          disabled={actionInProgress}
+          className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
           + Create Challenge
         </button>
@@ -127,7 +165,7 @@ export default function AdminChallengesPage() {
             key={filter.value}
             type="button"
             onClick={() => setSelectedFilter(filter.value)}
-            className={`text-sm px-4 py-1.5 rounded-full cursor-pointer ${
+            className={`cursor-pointer rounded-full px-4 py-1.5 text-sm ${
               selectedFilter === filter.value
                 ? "bg-[var(--color-primary)] text-white"
                 : "bg-[var(--color-surface)] text-[var(--color-slate)]"
@@ -159,50 +197,13 @@ export default function AdminChallengesPage() {
         <>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredChallenges.map((challenge) => (
-              <article
+              <AdminChallengeCard
                 key={challenge._id}
-                className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <h2 className="text-lg font-semibold text-[var(--color-slate)]">
-                    {challenge.title}
-                  </h2>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[challenge.status]}`}
-                  >
-                    {STATUS_LABELS[challenge.status] || challenge.status}
-                  </span>
-                </div>
-
-                <p className="mt-3 text-sm text-[var(--color-muted)]">
-                  {challenge.description}
-                </p>
-
-                <p className="mt-3 text-xs text-[var(--color-muted)]">
-                  {capitalize(challenge.category)} · cap{" "}
-                  {challenge.targetMetric} kg CO₂
-                </p>
-
-                <div className="mt-4 flex justify-between gap-3 text-sm">
-                  <span className="text-[var(--color-muted)]">
-                    Duration:{" "}
-                    {durationDays(challenge.startDate, challenge.endDate)} days
-                  </span>
-                  <span className="text-[var(--color-eco)]">
-                    {challenge.membersJoined ?? 0} participants
-                  </span>
-                </div>
-
-                <div className="mt-4 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(challenge)}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10"
-                  >
-                    Edit
-                  </button>
-                </div>
-              </article>
+                challenge={challenge}
+                onEdit={openEdit}
+                onEnd={handleEnd}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
 

@@ -17,6 +17,7 @@ const gamificationRoutes = require("./routes/gamificationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminChallengeRoutes = require("./routes/adminChallengeRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 connectDB();
 
 console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
@@ -39,6 +40,7 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", gamificationRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/", (req, res) => {
   res.send("EcoTrack Backend API is running");
