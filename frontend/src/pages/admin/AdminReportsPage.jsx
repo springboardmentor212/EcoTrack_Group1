@@ -127,7 +127,6 @@ async function downloadReport(id, fallbackName) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/* ---------- Chart components (no library needed) ---------- */
 function EmissionPie({ rows }) {
   const total = rows.reduce((sum, r) => sum + r.totalKg, 0);
 
@@ -399,7 +398,6 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      {/* ---------- Preview with charts (real data) ---------- */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-base font-bold text-slate-900">Preview</h2>
         <p className="mb-5 text-sm text-slate-500">
@@ -436,7 +434,6 @@ export default function AdminReportsPage() {
         ) : null}
       </section>
 
-      {/* ---------- Export a report ---------- */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-base font-bold text-slate-900">Export a report</h2>
         <p className="mb-4 text-sm text-slate-500">
@@ -565,7 +562,6 @@ export default function AdminReportsPage() {
         </div>
       </section>
 
-      {/* ---------- Past exports ---------- */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-base font-bold text-slate-900">Past exports</h2>

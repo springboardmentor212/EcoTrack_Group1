@@ -28,7 +28,6 @@ function parseDate(value, endOfDay = false) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// Map service section keys to the enum values in models/Report.js.
 const REPORT_INCLUDE_MAP = {
   emissions: "emissionsByCategory",
   goals: "goalResults",
@@ -73,7 +72,6 @@ const exportReport = async (req, res) => {
 
     const user = await User.findById(req.user.userId).select("name");
 
-    // IMPORTANT: reportService expects emissions, goals, challenges, users.
     created = await createReportFile({
       from,
       to,
@@ -82,7 +80,6 @@ const exportReport = async (req, res) => {
       generatedBy: user ? user.name : "",
     });
 
-    // The Report model uses different enum values.
     const report = await Report.create({
       scope: "admin",
       periodFrom: from,
@@ -102,7 +99,6 @@ const exportReport = async (req, res) => {
   } catch (err) {
     console.error("Export failed:", err);
 
-    // Remove the generated file if saving the report failed.
     if (created && created.absPath) {
       try {
         await fs.promises.unlink(created.absPath);

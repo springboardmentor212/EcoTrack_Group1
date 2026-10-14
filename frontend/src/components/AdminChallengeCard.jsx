@@ -14,8 +14,7 @@ const STATUS_LABELS = {
 
 const durationDays = (start, end) => {
   const days = Math.ceil(
-    (new Date(end).getTime() - new Date(start).getTime()) /
-      86400000,
+    (new Date(end).getTime() - new Date(start).getTime()) / 86400000,
   );
 
   return Math.max(1, days);
@@ -72,7 +71,10 @@ export default function AdminChallengeCard({
       </div>
 
       {/* Description */}
-      <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">
+      <p
+        title={challenge.description}
+        className="mt-2 line-clamp-2 min-h-[3rem] text-sm leading-relaxed text-[var(--color-muted)]"
+      >
         {challenge.description}
       </p>
 

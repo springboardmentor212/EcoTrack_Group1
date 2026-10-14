@@ -37,7 +37,7 @@ const ChallengeCard = ({
   return (
     <div
       onClick={openDetail}
-      className="cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+      className="flex h-full cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-[var(--color-slate)]">
@@ -45,7 +45,7 @@ const ChallengeCard = ({
         </h2>
 
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
             STATUS_STYLES[status] || STATUS_STYLES.active
           }`}
         >
@@ -53,7 +53,10 @@ const ChallengeCard = ({
         </span>
       </div>
 
-      <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
+      <p
+        title={description}
+        className="mt-2 line-clamp-2 min-h-[3rem] text-sm leading-6 text-[var(--color-muted)]"
+      >
         {description}
       </p>
 
@@ -70,11 +73,11 @@ const ChallengeCard = ({
         <span className="text-[var(--color-muted)]">Duration: {duration}</span>
 
         <span className="text-[var(--color-eco)]">
-          {participants} participants
+          {participants} {participants === 1 ? "participant" : "participants"}
         </span>
       </div>
 
-      <div className="mt-5 flex gap-3">
+      <div className="mt-auto flex gap-3 pt-5">
         {isAdmin && (
           <button
             onClick={(e) => {
