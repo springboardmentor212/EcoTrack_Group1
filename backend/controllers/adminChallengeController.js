@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const Challenge = require("../models/Challenge");
 const agg = require("../utils/challengeAggregations");
@@ -177,6 +176,10 @@ const updateChallenge = handle(async (req, res) => {
 
   const challenge = await Challenge.findById(req.params.id);
   if (!challenge) return fail(res, 404, "Challenge not found.");
+
+  if (challenge.endedAt || computeStatus(challenge) === "completed") {
+    return fail(res, 400, "Ended challenges cannot be edited.");
+  }
 
   const {
     title,
