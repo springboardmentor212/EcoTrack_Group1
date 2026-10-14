@@ -133,14 +133,16 @@ export default function AdminChallengeCard({
           </span>
         )}
 
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => runAction(() => onEdit(challenge))}
-          className="rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 disabled:opacity-50"
-        >
-          Edit
-        </button>
+        {!isCompleted && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => runAction(() => onEdit(challenge))}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 disabled:opacity-50"
+          >
+            Edit
+          </button>
+        )}
 
         {isActive && (
           <button
