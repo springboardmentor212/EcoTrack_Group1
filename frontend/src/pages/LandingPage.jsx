@@ -236,8 +236,8 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-[var(--color-background)]">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:py-16">
+      <section className="flex min-h-[calc(100dvh-4.5rem)] items-center bg-[var(--color-background)]">
+  <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:py-16">
           <div>
             <h1 className="text-3xl font-bold leading-tight text-[var(--color-primary)] sm:text-4xl lg:text-[2.75rem]">
               Track your carbon footprint and live more sustainably
