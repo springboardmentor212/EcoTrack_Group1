@@ -1,6 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getCarbonEntry, updateCarbonEntry } from "../services/carbonService";
+import { Trash2 } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
+import {
+  getCarbonEntry,
+  updateCarbonEntry,
+  deleteCarbonEntry,
+} from "../services/carbonService";
 import {
   calculateEmission,
   EMISSION_FACTORS,
@@ -14,6 +20,8 @@ export default function EntryDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchEntry = async () => {
@@ -90,6 +98,19 @@ export default function EntryDetail() {
       setError(err.response?.data?.message || "Couldn't save changes.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteCarbonEntry(id);
+      navigate("/carbon-tracker");
+    } catch (err) {
+      setShowDeleteConfirm(false);
+      setError(err.response?.data?.message || "Couldn't delete this entry.");
+      setDeleting(false);
     }
   };
 
@@ -193,6 +214,13 @@ export default function EntryDetail() {
             </span>
             <div className="flex gap-3">
               <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={saving}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg cursor-pointer transition-all duration-300 hover:bg-red-50 active:scale-[0.90] disabled:opacity-50"
+              >
+                <Trash2 size={14} /> Delete Entry
+              </button>
+              <button
                 onClick={() => navigate(-1)}
                 disabled={saving}
                 className="px-4 py-2 text-sm border border-[var(--color-slate)] rounded-lg disabled:opacity-50"
@@ -210,6 +238,16 @@ export default function EntryDetail() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete this entry?"
+        message="This will remove this log entry from your history. This can't be undone."
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onClose={() => setShowDeleteConfirm(false)}
+        isLoading={deleting}
+        danger
+      />
     </div>
   );
 }

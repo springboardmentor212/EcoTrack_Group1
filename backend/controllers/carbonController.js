@@ -35,10 +35,22 @@ const getCarbonEntries = async (req, res) => {
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
 
+    const { from, to } = req.query;
+
     const filter = {
       userId: req.user.userId,
       isDeleted: false,
     };
+
+    if (from || to) {
+      filter.date = {};
+      if (from) filter.date.$gte = new Date(from);
+      if (to) {
+        const endDate = new Date(to);
+        endDate.setHours(23, 59, 59, 999);
+        filter.date.$lte = endDate;
+      }
+    }
 
     const totalEntries = await CarbonEntry.countDocuments(filter);
 

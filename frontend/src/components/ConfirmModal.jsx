@@ -7,6 +7,7 @@ export default function ConfirmModal({
   onConfirm,
   onClose,
   isLoading = false,
+  danger = false,
 }) {
   if (!isOpen) return null;
 
@@ -65,7 +66,9 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="rounded-lg bg-[var(--color-eco)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 ${
+              danger ? "bg-red-600" : "bg-[var(--color-eco)]"
+            }`}
           >
             {isLoading ? "Please wait..." : confirmText}
           </button>
