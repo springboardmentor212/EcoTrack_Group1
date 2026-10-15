@@ -84,10 +84,10 @@ export default function Register() {
           </div>
 
           <h1 className="text-xl font-bold text-[var(--color-primary)]">
-            Welcome Back
+            Create Your Account
           </h1>
           <p className="mt-1 font-regular text-sm text-[var(--color-slate)]">
-            Sign in to track your carbon footprint
+            Sign up to start tracking your carbon footprint
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
@@ -175,14 +175,7 @@ export default function Register() {
                   to="/terms"
                   className="font-medium text-[var(--color-secondary)]"
                 >
-                  Terms of Service
-                </Link>{" "}
-                &{" "}
-                <Link
-                  to="/privacy"
-                  className="font-medium text-[var(--color-secondary)]"
-                >
-                  Privacy Policy
+                  Terms & Conditions
                 </Link>
               </span>
             </label>
