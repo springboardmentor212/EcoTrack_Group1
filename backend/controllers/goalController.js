@@ -4,8 +4,7 @@ const CarbonEntry = require("../models/CarbonEntry");
 const { createNotification } = require("../services/notificationService");
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const getPeriodStart = (timeframe) => {
-  const now = new Date();
+const getPeriodStart = (timeframe, now = new Date()) => {
   if (timeframe === "Daily") {
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
@@ -20,15 +19,23 @@ const getPeriodStart = (timeframe) => {
   return new Date(now.getFullYear(), now.getMonth(), 1);
 };
 
-const calculateCurrentValue = async (userId, category, timeframe) => {
-  const periodStart = getPeriodStart(timeframe);
+const calculateCurrentValue = async (
+  userId,
+  category,
+  timeframe,
+  refDate = new Date(),
+  endDate = null,
+) => {
+  const periodStart = getPeriodStart(timeframe, refDate);
 
   const result = await CarbonEntry.aggregate([
     {
       $match: {
         userId: new mongoose.Types.ObjectId(userId),
         category: { $regex: `^${category}$`, $options: "i" },
-        date: { $gte: periodStart },
+        date: endDate
+          ? { $gte: periodStart, $lt: endDate }
+          : { $gte: periodStart },
         isDeleted: { $ne: true },
       },
     },
@@ -40,6 +47,38 @@ const calculateCurrentValue = async (userId, category, timeframe) => {
 
 const refreshGoal = async (goal, userId) => {
   if (goal.status === "completed") return goal;
+
+  if (goal.deadline) {
+    const deadline = new Date(goal.deadline);
+    const deadlineEnd = new Date(deadline.getTime() + DAY_MS);
+    if (deadlineEnd <= new Date()) {
+      const finalValue = await calculateCurrentValue(
+        userId,
+        goal.category,
+        goal.timeframe,
+        deadline,
+        deadlineEnd,
+      );
+      if (finalValue <= goal.target) {
+        goal.currentValue = finalValue;
+        goal.status = "completed";
+        await goal.save();
+        try {
+          await createNotification({
+            userId,
+            type: "goal",
+            title: "Goal completed 🎉",
+            message: `You stayed under the cap for "${goal.title}". It was completed automatically.`,
+            dedupKey: `goal-auto-complete:${goal._id}`,
+          });
+        } catch (e) {
+          console.error("goal auto-complete notification failed:", e.message);
+        }
+        return goal;
+      }
+    }
+  }
+
   const currentValue = await calculateCurrentValue(
     userId,
     goal.category,
