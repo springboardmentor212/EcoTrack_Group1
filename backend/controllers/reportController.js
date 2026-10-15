@@ -1,7 +1,10 @@
-
 const fs = require("fs");
 const Report = require("../models/Report");
 const User = require("../models/User");
+const {
+  emissionsByCategory,
+  goalResults,
+} = require("../utils/reportAggregations");
 
 const {
   createReportFile,
@@ -19,15 +22,12 @@ function parseDate(value, endOfDay = false) {
   if (!value) return null;
 
   const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? new Date(
-        `${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`
-      )
+    ? new Date(`${value}T${endOfDay ? "23:59:59.999" : "00:00:00.000"}`)
     : new Date(value);
 
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// Map service section keys to the enum values in models/Report.js.
 const REPORT_INCLUDE_MAP = {
   emissions: "emissionsByCategory",
   goals: "goalResults",
@@ -66,13 +66,12 @@ const exportReport = async (req, res) => {
       return fail(
         res,
         400,
-        `includes may only contain: ${INCLUDE_KEYS.join(", ")}.`
+        `includes may only contain: ${INCLUDE_KEYS.join(", ")}.`,
       );
     }
 
     const user = await User.findById(req.user.userId).select("name");
 
-    // IMPORTANT: reportService expects emissions, goals, challenges, users.
     created = await createReportFile({
       from,
       to,
@@ -81,7 +80,6 @@ const exportReport = async (req, res) => {
       generatedBy: user ? user.name : "",
     });
 
-    // The Report model uses different enum values.
     const report = await Report.create({
       scope: "admin",
       periodFrom: from,
@@ -101,7 +99,6 @@ const exportReport = async (req, res) => {
   } catch (err) {
     console.error("Export failed:", err);
 
-    // Remove the generated file if saving the report failed.
     if (created && created.absPath) {
       try {
         await fs.promises.unlink(created.absPath);
@@ -158,12 +155,12 @@ const downloadReport = async (req, res) => {
       "Content-Type",
       report.format === "pdf"
         ? "application/pdf"
-        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${report.fileName}"`
+      `attachment; filename="${report.fileName}"`,
     );
 
     return res.download(absPath, report.fileName, (err) => {
@@ -181,8 +178,34 @@ const downloadReport = async (req, res) => {
   }
 };
 
+const getPreview = async (req, res) => {
+  try {
+    const from = parseDate(req.query.from);
+    const to = parseDate(req.query.to, true);
+
+    if (!from || !to) {
+      return fail(res, 400, "Valid from and to dates are required.");
+    }
+
+    if (from > to) {
+      return fail(res, 400, "From date must be before To date.");
+    }
+
+    const [emissions, goals] = await Promise.all([
+      emissionsByCategory(from, to),
+      goalResults(from, to),
+    ]);
+
+    return res.json({ success: true, data: { emissions, goals } });
+  } catch (err) {
+    console.error("Report preview failed:", err);
+    return fail(res, 500, "Could not load the preview.");
+  }
+};
+
 module.exports = {
   exportReport,
   getHistory,
   downloadReport,
+  getPreview,
 };

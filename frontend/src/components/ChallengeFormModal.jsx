@@ -1,36 +1,28 @@
-
 import { useState } from "react";
-import {
-  CATEGORIES,
-  capitalize,
-  toInputDate,
-} from "../utils/challengeUtils";
+import { CATEGORIES, capitalize, toInputDate } from "../utils/challengeUtils";
 
-const ChallengeFormModal = ({
-  onClose,
-  onSave,
-  editingChallenge,
-}) => {
-  const [title, setTitle] = useState(
-    editingChallenge?.title || ""
-  );
+const inputClass =
+  "mt-1 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm";
+
+const ChallengeFormModal = ({ onClose, onSave, editingChallenge }) => {
+  const [title, setTitle] = useState(editingChallenge?.title || "");
   const [description, setDescription] = useState(
-    editingChallenge?.description || ""
+    editingChallenge?.description || "",
   );
   const [category, setCategory] = useState(
-    editingChallenge?.category || CATEGORIES[0]
+    editingChallenge?.category || CATEGORIES[0],
   );
   const [startDate, setStartDate] = useState(
-    toInputDate(editingChallenge?.startDate)
+    toInputDate(editingChallenge?.startDate),
   );
   const [endDate, setEndDate] = useState(
-    toInputDate(editingChallenge?.endDate)
+    toInputDate(editingChallenge?.endDate),
   );
   const [targetMetric, setTargetMetric] = useState(
-    editingChallenge?.targetMetric ?? ""
+    editingChallenge?.targetMetric ?? "",
   );
   const [rewardPoints, setRewardPoints] = useState(
-    editingChallenge?.rewardPoints ?? 0
+    editingChallenge?.rewardPoints ?? 0,
   );
 
   const [saving, setSaving] = useState(false);
@@ -63,20 +55,12 @@ const ChallengeFormModal = ({
     const metric = Number(targetMetric);
     const points = Number(rewardPoints);
 
-    if (
-      targetMetric === "" ||
-      !Number.isFinite(metric) ||
-      metric < 0
-    ) {
+    if (targetMetric === "" || !Number.isFinite(metric) || metric < 0) {
       setError("Emission cap must be a valid non-negative number.");
       return;
     }
 
-    if (
-      rewardPoints === "" ||
-      !Number.isInteger(points) ||
-      points < 0
-    ) {
+    if (rewardPoints === "" || !Number.isInteger(points) || points < 0) {
       setError("Reward points must be a non-negative whole number.");
       return;
     }
@@ -94,21 +78,17 @@ const ChallengeFormModal = ({
         rewardPoints: points,
       });
     } catch (err) {
-      setError(
-        err.message || "Could not save the challenge."
-      );
+      setError(err.message || "Could not save the challenge.");
       setSaving(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md px-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between">
+      <div className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-xl bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between px-5 pb-1 pt-4">
           <h2 className="text-xl font-semibold text-[var(--color-slate)]">
-            {editingChallenge
-              ? "Edit Challenge"
-              : "Create Challenge"}
+            {editingChallenge ? "Edit Challenge" : "Create Challenge"}
           </h2>
 
           <button
@@ -122,153 +102,146 @@ const ChallengeFormModal = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <div>
-            <label
-              htmlFor="challenge-title"
-              className="text-sm font-medium"
-            >
-              Challenge Title
-            </label>
-            <input
-              id="challenge-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              maxLength={100}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="challenge-description"
-              className="text-sm font-medium"
-            >
-              Description
-            </label>
-            <textarea
-              id="challenge-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={3}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="challenge-category"
-              className="text-sm font-medium"
-            >
-              Category
-            </label>
-            <select
-              id="challenge-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-            >
-              {CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {capitalize(item)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="space-y-3 overflow-y-auto px-5 py-3">
             <div>
-              <label
-                htmlFor="challenge-cap"
-                className="text-sm font-medium"
-              >
-                Emission cap (kg CO₂e)
+              <label htmlFor="challenge-title" className="text-sm font-medium">
+                Challenge Title
               </label>
               <input
-                id="challenge-cap"
-                type="number"
-                min="0"
-                step="any"
-                value={targetMetric}
-                onChange={(e) => setTargetMetric(e.target.value)}
+                id="challenge-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                maxLength={100}
+                className={inputClass}
               />
             </div>
 
             <div>
               <label
-                htmlFor="challenge-points"
+                htmlFor="challenge-description"
                 className="text-sm font-medium"
               >
-                Reward points
+                Description
               </label>
-              <input
-                id="challenge-points"
-                type="number"
-                min="0"
-                step="1"
-                value={rewardPoints}
-                onChange={(e) => setRewardPoints(e.target.value)}
+              <textarea
+                id="challenge-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 required
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                htmlFor="challenge-start"
-                className="text-sm font-medium"
-              >
-                Start date
-              </label>
-              <input
-                id="challenge-start"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                rows={2}
+                className={`${inputClass} resize-none`}
               />
             </div>
 
             <div>
               <label
-                htmlFor="challenge-end"
+                htmlFor="challenge-category"
                 className="text-sm font-medium"
               >
-                End date
+                Category
               </label>
-              <input
-                id="challenge-end"
-                type="date"
-                value={endDate}
-                min={startDate || undefined}
-                onChange={(e) => setEndDate(e.target.value)}
+              <select
+                id="challenge-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 required
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
+                className={inputClass}
+              >
+                {CATEGORIES.map((item) => (
+                  <option key={item} value={item}>
+                    {capitalize(item)}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="challenge-cap" className="text-sm font-medium">
+                  Emission cap (kg CO₂e)
+                </label>
+                <input
+                  id="challenge-cap"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={targetMetric}
+                  onChange={(e) => setTargetMetric(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="challenge-points"
+                  className="text-sm font-medium"
+                >
+                  Reward points
+                </label>
+                <input
+                  id="challenge-points"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={rewardPoints}
+                  onChange={(e) => setRewardPoints(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="challenge-start"
+                  className="text-sm font-medium"
+                >
+                  Start date
+                </label>
+                <input
+                  id="challenge-start"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="challenge-end" className="text-sm font-medium">
+                  End date
+                </label>
+                <input
+                  id="challenge-end"
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
           </div>
 
-          {error && (
-            <p role="alert" className="text-sm text-red-600">
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-3 pt-3">
+          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 px-5 py-3">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm disabled:opacity-50"
             >
               Cancel
             </button>
@@ -276,7 +249,7 @@ const ChallengeFormModal = ({
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[var(--color-eco)] px-5 py-2 text-white disabled:opacity-60"
+              className="rounded-lg bg-[var(--color-eco)] px-5 py-2 text-sm text-white disabled:opacity-60"
             >
               {saving
                 ? "Saving..."
