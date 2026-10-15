@@ -161,15 +161,16 @@ export default function Register() {
               />
             </div>
 
-            <label className="flex items-start gap-2 text-sm text-[var(--color-muted)]">
+            <div className="flex items-start gap-2 text-sm text-[var(--color-muted)]">
               <input
+                id="terms-checkbox"
                 type="checkbox"
                 required
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
                 className="mt-0.5 h-4 w-4 rounded border-[var(--color-slate)]"
               />
-              <span>
+              <label htmlFor="terms-checkbox" className="cursor-pointer">
                 I agree to the{" "}
                 <Link
                   to="/terms"
@@ -177,8 +178,8 @@ export default function Register() {
                 >
                   Terms & Conditions
                 </Link>
-              </span>
-            </label>
+              </label>
+            </div>
 
             <button
               type="submit"
