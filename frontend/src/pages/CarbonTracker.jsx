@@ -18,10 +18,9 @@ function rangeToDates(rangeLabel) {
     from.setMonth(0);
     from.setDate(1);
   } else from.setDate(to.getDate() - 30);
-  return {
-    from: from.toISOString().slice(0, 10),
-    to: to.toISOString().slice(0, 10),
-  };
+  const toYMD = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return { from: toYMD(from), to: toYMD(to) };
 }
 
 export default function CarbonTracker() {
@@ -71,7 +70,8 @@ export default function CarbonTracker() {
         setTotalEntries(carbonEntries.length);
         setTotalPages(1);
       } else {
-        const res = await getCarbonEntries(page, LIMIT);
+        const { from, to } = rangeToDates(dateRange);
+        const res = await getCarbonEntries(page, LIMIT, from, to);
         let carbonEntries = res?.data?.carbonEntries || [];
         carbonEntries.sort((a, b) => {
           const dateA = new Date(a.date);
@@ -246,7 +246,8 @@ export default function CarbonTracker() {
                     colSpan={5}
                     className="px-5 py-6 text-center text-[var(--color-slate)]"
                   >
-                    No entries yet — log your first activity.
+                    No entries found for this period. Try a wider date range or
+                    log a new activity.
                   </td>
                 </tr>
               )}
