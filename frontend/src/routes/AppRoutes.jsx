@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 
+import LandingPage from "../pages/LandingPage";
+import TermsAndConditions from "../pages/TermsAndConditions";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
@@ -26,7 +28,8 @@ import AdminReportsPage from "../pages/admin/AdminReportsPage";
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/terms" element={<TermsAndConditions />} />
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
